@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.dependencies.auth_dependency import get_current_user
+from app.dependencies.auth_dependency import (
+    get_current_user,
+    require_role 
+    )
 from fastapi.security import OAuth2PasswordRequestForm
 from app.core.database import get_db
 from app.models.user import User
@@ -19,7 +22,8 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         name=user.name,
         email=user.email,
-        password=hash_password(user.password)
+        password=hash_password(user.password),
+        role=user.role
     )
 
     db.add(new_user)
@@ -30,9 +34,10 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
     access_token = create_access_token(
     data={
-        "sub": existing_user.email
+        "sub": new_user.email
     }
 )
+    
     return {
     "message": "Login successful",
     "access_token": access_token,
@@ -73,8 +78,14 @@ def login(
     return {
         "message": "Login successful",
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+             "name": existing_user.name,
+             "email": existing_user.email,
+             "role": existing_user.role
+}
     }
+    
 
 @router.get("/profile")
 def profile(current_user = Depends(get_current_user)):
@@ -83,4 +94,40 @@ def profile(current_user = Depends(get_current_user)):
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email
+    }
+
+@router.get("/admin/dashboard")
+def admin_dashboard(
+    current_user = Depends(
+        require_role("admin")
+    )
+):
+
+    return {
+        "message": "Welcome Admin",
+        "user": current_user.name
+    }
+
+@router.get("/recruiter/dashboard")
+def recruiter_dashboard(
+    current_user = Depends(
+        require_role("recruiter")
+    )
+):
+
+    return {
+        "message": "Welcome Recruiter",
+        "user": current_user.name
+    }
+
+@router.get("/candidate/dashboard")
+def candidate_dashboard(
+    current_user = Depends(
+        require_role("candidate")
+    )
+):
+
+    return {
+        "message": "Welcome Candidate",
+        "user": current_user.name
     }
