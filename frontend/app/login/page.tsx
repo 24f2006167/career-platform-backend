@@ -1,111 +1,130 @@
 // "use client";
 
+// import { useState } from "react";
 // import Link from "next/link";
-// import { useRouter } from "next/navigation";
-// import { useState, useEffect } from "react";
-// import API from "@/services/api";
 
 // export default function LoginPage() {
 
-//   const router = useRouter();
+//   const [email, setEmail] =
+//     useState("");
 
-//   const [loading, setLoading] = useState(false);
+//   const [password, setPassword] =
+//     useState("");
 
-//   const [formData, setFormData] = useState({
-//     email: "",
-//     password: "",
-//   });
+//   const [loading, setLoading] =
+//     useState(false);
 
+//   const [error, setError] =
+//     useState("");
 
-//   // HANDLE INPUT
-//   const handleChange = (
-//     e: React.ChangeEvent<HTMLInputElement>
-//   ) => {
-
-//     setFormData({
-//       ...formData,
-//       [e.target.name]: e.target.value,
-//     });
-
-//   };
-
-//   // HANDLE LOGIN
+//   // LOGIN
 //   const handleLogin = async (
 //     e: React.FormEvent
 //   ) => {
 
 //     e.preventDefault();
 
+//     setError("");
+
 //     try {
 
 //       setLoading(true);
 
-//       const params = new URLSearchParams();
+//       // FORM DATA
+//       const formData =
+//         new URLSearchParams();
 
-//       params.append(
+//       formData.append(
 //         "username",
-//         formData.email
+//         email
 //       );
 
-//       params.append(
+//       formData.append(
 //         "password",
-//         formData.password
+//         password
 //       );
 
-//       const response = await API.post(
-//         "/login",
-//         params.toString(),
+//       // API REQUEST
+//       const response = await fetch(
+//         // "http://127.0.0.1:8000/login",
+//         "http://localhost:8000/login",
 //         {
+//           method: "POST",
+
+//           credentials: "include",
+
 //           headers: {
 //             "Content-Type":
 //               "application/x-www-form-urlencoded",
 //           },
+
+//           body: formData.toString(),
 //         }
 //       );
 
-//       // LOGIN FAILED
-//       if (!response.data.access_token) {
+//       const data =
+//         await response.json();
 
-//         alert(
-//           response.data.message ||
+//       console.log(
+//         "LOGIN RESPONSE:",
+//         data
+//       );
+
+//       // ERROR
+//       if (!response.ok) {
+
+//         setError(
+//           data.detail ||
 //           "Login failed"
 //         );
 
 //         return;
-//       }
 
-//       // SAVE TOKEN
-//       localStorage.setItem(
-//         "token",
-//         response.data.access_token
-//       );
+//       }
 
 //       // SAVE USER
 //       localStorage.setItem(
 //         "user",
-//         JSON.stringify({
-//           name:
-//             response.data.user?.name ||
-//             "User",
-//           role:
-//             response.data.user?.role ||
-//             "candidate",
-//         })
+//         JSON.stringify(data.user)
 //       );
 
-//       alert("Login successful!");
-//       localStorage.setItem("isNewUser", "false");
+//       // OLD USER
+//       localStorage.setItem(
+//         "isNewUser",
+//         "false"
+//       );
 
-//       router.replace("/dashboard");
+//       // REDIRECT
+//       if (
+//         data.user.role === "admin"
+//       ) {
 
-//     } catch (error: any) {
+//         window.location.href =
+//           "/dashboard/admin";
 
-//       console.log(error);
+//       } else if (
+//         data.user.role === "recruiter"
+//       ) {
 
-//       alert(
-//         error?.response?.data?.detail ||
-//         error?.response?.data?.message ||
-//         "Login failed"
+//         window.location.href =
+//           "/dashboard/recruiter";
+
+//       } else {
+
+//         window.location.href =
+//           "/dashboard/candidate";
+
+//       }
+
+//     } catch (error) {
+
+//       console.log(
+//         "LOGIN ERROR:",
+//         error
+//       );
+
+//       setError(
+//         "Server connection error"
 //       );
 
 //     } finally {
@@ -113,52 +132,62 @@
 //       setLoading(false);
 
 //     }
+
 //   };
 
 //   return (
 
-//     <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 relative overflow-hidden">
+//     <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 overflow-hidden relative">
 
-//       {/* GLOW */}
-//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[150px] rounded-full" />
+//       {/* BACKGROUND */}
+//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[160px] rounded-full" />
 
 //       {/* CARD */}
-//       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl">
+//       <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
 
-//         {/* HEADER */}
-//         <div className="mb-8 text-center">
+//         <h1 className="text-5xl font-black text-center">
+//           Welcome Back
+//         </h1>
 
-//           <h1 className="text-5xl font-black">
-//             Welcome Back
-//           </h1>
+//         <p className="mt-4 text-center text-gray-400">
+//           Continue your AI-powered career journey.
+//         </p>
 
-//           <p className="mt-3 text-gray-400">
-//             Login to continue your preparation journey.
-//           </p>
+//         {/* ERROR */}
+//         {error && (
 
-//         </div>
+//           <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
+
+//             {error}
+
+//           </div>
+
+//         )}
 
 //         {/* FORM */}
 //         <form
 //           onSubmit={handleLogin}
-//           className="space-y-6"
+//           className="mt-8 space-y-6"
 //         >
 
 //           {/* EMAIL */}
 //           <div>
 
-//             <label className="mb-2 block text-sm text-gray-300">
+//             <label className="text-gray-400">
 //               Email
 //             </label>
 
 //             <input
 //               type="email"
-//               name="email"
-//               value={formData.email}
-//               onChange={handleChange}
-//               placeholder="Enter your email"
-//               className="w-full rounded-2xl border border-white/10 bg-black/30 px-5 py-4 outline-none focus:border-purple-500"
+//               placeholder="Enter email"
+//               value={email}
+//               onChange={(e) =>
+//                 setEmail(
+//                   e.target.value
+//                 )
+//               }
 //               required
+//               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
 //             />
 
 //           </div>
@@ -166,18 +195,21 @@
 //           {/* PASSWORD */}
 //           <div>
 
-//             <label className="mb-2 block text-sm text-gray-300">
+//             <label className="text-gray-400">
 //               Password
 //             </label>
 
 //             <input
 //               type="password"
-//               name="password"
-//               value={formData.password}
-//               onChange={handleChange}
-//               placeholder="Enter your password"
-//               className="w-full rounded-2xl border border-white/10 bg-black/30 px-5 py-4 outline-none focus:border-purple-500"
+//               placeholder="Enter password"
+//               value={password}
+//               onChange={(e) =>
+//                 setPassword(
+//                   e.target.value
+//                 )
+//               }
 //               required
+//               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
 //             />
 
 //           </div>
@@ -186,139 +218,112 @@
 //           <button
 //             type="submit"
 //             disabled={loading}
-//             className="w-full rounded-2xl bg-white py-4 font-bold text-black transition hover:scale-[1.02] disabled:opacity-50"
+//             className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
 //           >
+
 //             {loading
 //               ? "Logging in..."
 //               : "Login"}
+
 //           </button>
 
 //         </form>
 
-//         {/* FOOTER */}
-//         <div className="mt-8 text-center text-gray-400">
+//         {/* SIGNUP */}
+//         <p className="mt-8 text-center text-gray-500">
 
-//           <p>
-//             Don’t have an account?{" "}
+//           Don’t have an account?{" "}
 
-//             <Link
-//               href="/signup"
-//               className="text-purple-400 hover:text-purple-300"
-//             >
-//               Signup
-//             </Link>
-//           </p>
+//           <Link
+//             href="/signup"
+//             className="text-purple-400 hover:text-purple-300"
+//           >
+//             Signup
+//           </Link>
 
-//         </div>
-
-//         {/* CREDITS */}
-//         <div className="mt-8 border-t border-white/10 pt-6 text-center">
-
-//           <p className="text-sm text-gray-500">
-//             Built with ❤️ by
-//           </p>
-
-//           <h3 className="mt-2 text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-//             Shitanshu Chaurasiya
-//           </h3>
-
-//           <p className="mt-1 text-xs text-gray-600">
-//             AI Powered Career Preparation Platform
-//           </p>
-
-//         </div>
+//         </p>
 
 //       </div>
 
 //     </main>
+
 //   );
+
 // }
 
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import API from "@/services/api";
+import Link from "next/link";
+
+import API from "@/lib/api";
 
 export default function LoginPage() {
 
-  const router = useRouter();
+  const [email, setEmail] =
+    useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] =
+    useState("");
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [loading, setLoading] =
+    useState(false);
 
-  // HANDLE INPUT
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const [error, setError] =
+    useState("");
 
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-
-  };
-
-  // HANDLE LOGIN
+  // LOGIN
   const handleLogin = async (
     e: React.FormEvent
   ) => {
 
     e.preventDefault();
 
+    setError("");
+
     try {
 
       setLoading(true);
 
-      const params = new URLSearchParams();
+      // FORM DATA
+      const formData =
+        new URLSearchParams();
 
-      params.append(
+      formData.append(
         "username",
-        formData.email
+        email
       );
 
-      params.append(
+      formData.append(
         "password",
-        formData.password
+        password
       );
 
-      const response = await API.post(
-        "/login",
-        params.toString(),
-        {
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded",
-          },
-        }
-      );
-
-      // LOGIN FAILED
-      if (!response.data.access_token) {
-
-        alert(
-          response.data.message ||
-          "Login failed"
+      // API REQUEST
+      const response =
+        await API.post(
+          "/login",
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "application/x-www-form-urlencoded",
+            },
+          }
         );
 
-        return;
-      }
+      const data =
+        response.data;
 
-      // SAVE TOKEN
-      localStorage.setItem(
-        "token",
-        response.data.access_token
+      console.log(
+        "LOGIN RESPONSE:",
+        data
       );
 
       // SAVE USER
       localStorage.setItem(
         "user",
-        JSON.stringify(response.data.user)
+        JSON.stringify(data.user)
       );
 
       // OLD USER
@@ -327,49 +332,44 @@ export default function LoginPage() {
         "false"
       );
 
-      alert("Login successful!");
+      // REDIRECT
+      if (
+        data.user.role ===
+        "admin"
+      ) {
 
-      // ROLE BASED REDIRECT
-      const role = response.data.user.role;
-
-      if (role === "candidate") {
-
-        router.replace(
-          "/dashboard/candidate"
-        );
+        window.location.href =
+          "/dashboard/admin";
 
       }
 
-      else if (role === "recruiter") {
+      else if (
+        data.user.role ===
+        "recruiter"
+      ) {
 
-        router.replace(
-          "/dashboard/recruiter"
-        );
-
-      }
-
-      else if (role === "admin") {
-
-        router.replace(
-          "/dashboard/admin"
-        );
+        window.location.href =
+          "/dashboard/recruiter";
 
       }
 
       else {
 
-        router.replace("/");
+        window.location.href =
+          "/dashboard/candidate";
 
       }
 
     } catch (error: any) {
 
-      console.log(error);
+      console.log(
+        "LOGIN ERROR:",
+        error
+      );
 
-      alert(
+      setError(
         error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        "Login failed"
+        "Server connection error"
       );
 
     } finally {
@@ -377,52 +377,62 @@ export default function LoginPage() {
       setLoading(false);
 
     }
+
   };
 
   return (
 
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 relative overflow-hidden">
+    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 overflow-hidden relative">
 
       {/* BACKGROUND */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[150px] rounded-full" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[160px] rounded-full" />
 
       {/* CARD */}
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl">
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
 
-        {/* HEADER */}
-        <div className="mb-8 text-center">
+        <h1 className="text-5xl font-black text-center">
+          Welcome Back
+        </h1>
 
-          <h1 className="text-5xl font-black">
-            Welcome Back
-          </h1>
+        <p className="mt-4 text-center text-gray-400">
+          Continue your AI-powered career journey.
+        </p>
 
-          <p className="mt-3 text-gray-400">
-            Continue your AI-powered career journey.
-          </p>
+        {/* ERROR */}
+        {error && (
 
-        </div>
+          <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
+
+            {error}
+
+          </div>
+
+        )}
 
         {/* FORM */}
         <form
           onSubmit={handleLogin}
-          className="space-y-6"
+          className="mt-8 space-y-6"
         >
 
           {/* EMAIL */}
           <div>
 
-            <label className="mb-2 block text-sm text-gray-300">
+            <label className="text-gray-400">
               Email
             </label>
 
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full rounded-2xl border border-white/10 bg-black/30 px-5 py-4 outline-none focus:border-purple-500"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value
+                )
+              }
               required
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
             />
 
           </div>
@@ -430,18 +440,21 @@ export default function LoginPage() {
           {/* PASSWORD */}
           <div>
 
-            <label className="mb-2 block text-sm text-gray-300">
+            <label className="text-gray-400">
               Password
             </label>
 
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="w-full rounded-2xl border border-white/10 bg-black/30 px-5 py-4 outline-none focus:border-purple-500"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
               required
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
             />
 
           </div>
@@ -450,7 +463,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-white py-4 font-bold text-black transition hover:scale-[1.02] disabled:opacity-50"
+            className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
           >
 
             {loading
@@ -461,43 +474,24 @@ export default function LoginPage() {
 
         </form>
 
-        {/* FOOTER */}
-        <div className="mt-8 text-center text-gray-400">
+        {/* SIGNUP */}
+        <p className="mt-8 text-center text-gray-500">
 
-          <p>
+          Don’t have an account?{" "}
 
-            Don’t have an account?{" "}
+          <Link
+            href="/signup"
+            className="text-purple-400 hover:text-purple-300"
+          >
+            Signup
+          </Link>
 
-            <Link
-              href="/signup"
-              className="text-purple-400 hover:text-purple-300"
-            >
-              Signup
-            </Link>
-
-          </p>
-
-        </div>
-
-        {/* CREDITS */}
-        <div className="mt-8 border-t border-white/10 pt-6 text-center">
-
-          <p className="text-sm text-gray-500">
-            Built with ❤️ by
-          </p>
-
-          <h3 className="mt-2 text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Shitanshu Chaurasiya
-          </h3>
-
-          <p className="mt-1 text-xs text-gray-600">
-            AI Powered Career Preparation Platform
-          </p>
-
-        </div>
+        </p>
 
       </div>
 
     </main>
+
   );
+
 }

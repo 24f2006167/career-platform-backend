@@ -2,47 +2,36 @@
 // "use client";
 
 // import Link from "next/link";
-// import { useState, useEffect } from "react";
-// import { useRouter } from "next/navigation";
-// import API from "@/services/api";
+// import { useState } from "react";
 
 // export default function SignupPage() {
 
-//   const router = useRouter();
-
-//   // REDIRECT IF LOGGED IN
-//   useEffect(() => {
-
-//     const token = localStorage.getItem("token");
-
-//     if (token) {
-
-//       router.replace("/");
-
-//     }
-
-//   }, [router]);
-
 //   // FORM STATE
-//   const [formData, setFormData] = useState({
-//     name: "",
-//     email: "",
-//     password: "",
-//     role: "candidate",
-//   });
+//   const [formData, setFormData] =
+//     useState({
+//       name: "",
+//       email: "",
+//       password: "",
+//       role: "candidate",
+//     });
 
-//   const [loading, setLoading] = useState(false);
+//   const [loading, setLoading] =
+//     useState(false);
+
+//   const [error, setError] =
+//     useState("");
 
 //   // HANDLE INPUT
 //   const handleChange = (
 //     e: React.ChangeEvent<
-//       HTMLInputElement | HTMLSelectElement
+//       HTMLInputElement
 //     >
 //   ) => {
 
 //     setFormData({
 //       ...formData,
-//       [e.target.name]: e.target.value,
+//       [e.target.name]:
+//         e.target.value,
 //     });
 
 //   };
@@ -54,99 +43,127 @@
 
 //     e.preventDefault();
 
+//     setError("");
+
 //     try {
 
 //       setLoading(true);
 
-//       // API REQUEST
-//       const response = await API.post(
-//         "/signup",
-//         formData
+//       // CLEAR OLD SESSION
+//       await fetch(
+//         "http://localhost:8000/logout",
+//         {
+//           method: "POST",
+//           credentials: "include",
+//         }
 //       );
 
-//       // SAVE TOKEN
-//       localStorage.setItem(
-//         "token",
-//         response.data.access_token
+//       // CLEAR OLD STORAGE
+//       localStorage.clear();
+
+//       // SIGNUP REQUEST
+//       const response = await fetch(
+//         "http://localhost:8000/signup",
+//         {
+//           method: "POST",
+
+//           credentials: "include",
+
+//           headers: {
+//             "Content-Type":
+//               "application/json",
+//           },
+
+//           body: JSON.stringify(
+//             formData
+//           ),
+//         }
 //       );
+
+//       const data =
+//         await response.json();
+
+//       console.log(
+//         "SIGNUP RESPONSE:",
+//         data
+//       );
+
+//       // ERROR
+//       if (!response.ok) {
+
+//         setError(
+//           data.detail ||
+//           "Signup failed"
+//         );
+
+//         return;
+
+//       }
 
 //       // SAVE USER
 //       localStorage.setItem(
 //         "user",
-//         JSON.stringify(response.data.user)
+//         JSON.stringify(data.user)
 //       );
 
-//       // NEW USER
+//       // NEW USER FLAG
 //       localStorage.setItem(
 //         "isNewUser",
 //         "true"
 //       );
 
-//       alert("Signup successful!");
+//       // REDIRECT
+//       setTimeout(() => {
 
-//       // ROLE BASED REDIRECT
-//       const role = response.data.user.role;
+//         // ADMIN
+//         if (
+//           data.user.role ===
+//           "admin"
+//         ) {
 
-//       if (role === "candidate") {
+//           window.location.href =
+//             "/dashboard/admin";
 
-//         router.push(
-//           "/dashboard/candidate"
-//         );
+//         }
 
-//       }
+//         // RECRUITER
+//         else if (
+//           data.user.role ===
+//           "recruiter"
+//         ) {
 
-//       else if (role === "recruiter") {
+//           window.location.href =
+//             "/dashboard/recruiter";
 
-//         router.push(
-//           "/dashboard/recruiter"
-//         );
+//         }
 
-//       }
+//         // CANDIDATE
+//         else {
 
-//       else if (role === "admin") {
+//           window.location.href =
+//             "/dashboard/candidate";
 
-//         router.push(
-//           "/dashboard/admin"
-//         );
+//         }
 
-//       }
+//       }, 300);
 
-//       else {
+//     } catch (error) {
 
-//         router.push("/");
+//       console.log(
+//         "SIGNUP ERROR:",
+//         error
+//       );
 
-//       }
-
-//     } catch (error: any) {
-
-//       console.log(error);
-
-//       const errorMessage =
-//         error?.response?.data?.detail ||
-//         error?.response?.data?.message ||
-//         "Signup failed";
-
-//       alert(errorMessage);
-
-//       // EMAIL ALREADY EXISTS
-//       if (
-//         errorMessage ===
-//         "Email already registered"
-//       ) {
-
-//         setTimeout(() => {
-
-//           router.push("/login");
-
-//         }, 1000);
-
-//       }
+//       setError(
+//         "Server connection error"
+//       );
 
 //     } finally {
 
 //       setLoading(false);
 
 //     }
+
 //   };
 
 //   return (
@@ -157,7 +174,7 @@
 //       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-pink-500/20 blur-[150px] rounded-full" />
 
 //       {/* CARD */}
-//       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl">
+//       <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
 
 //         {/* HEADER */}
 //         <div className="mb-8 text-center">
@@ -171,6 +188,17 @@
 //           </p>
 
 //         </div>
+
+//         {/* ERROR */}
+//         {error && (
+
+//           <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
+
+//             {error}
+
+//           </div>
+
+//         )}
 
 //         {/* FORM */}
 //         <form
@@ -190,9 +218,9 @@
 //               name="name"
 //               value={formData.name}
 //               onChange={handleChange}
-//               placeholder="Enter your full name"
-//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+//               placeholder="Enter full name"
 //               required
+//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
 //             />
 
 //           </div>
@@ -209,9 +237,9 @@
 //               name="email"
 //               value={formData.email}
 //               onChange={handleChange}
-//               placeholder="Enter your email"
-//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+//               placeholder="Enter email"
 //               required
+//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
 //             />
 
 //           </div>
@@ -228,9 +256,9 @@
 //               name="password"
 //               value={formData.password}
 //               onChange={handleChange}
-//               placeholder="Create password"
-//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+//               placeholder="Enter password"
 //               required
+//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
 //             />
 
 //           </div>
@@ -238,26 +266,69 @@
 //           {/* ROLE */}
 //           <div>
 
-//             <label className="mb-2 block text-sm text-gray-300">
+//             <label className="mb-3 block text-sm text-gray-300">
 //               Select Role
 //             </label>
 
-//             <select
-//               name="role"
-//               value={formData.role}
-//               onChange={handleChange}
-//               className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
-//             >
+//             <div className="grid grid-cols-2 gap-4">
 
-//               <option value="candidate">
+//               {/* CANDIDATE */}
+//               <button
+//                 type="button"
+//                 onClick={() =>
+//                   setFormData({
+//                     ...formData,
+//                     role: "candidate",
+//                   })
+//                 }
+//                 className={`rounded-2xl border px-5 py-4 font-semibold transition-all duration-300
+
+//                 ${
+//                   formData.role ===
+//                   "candidate"
+//                     ? "border-pink-500 bg-pink-500/20 text-pink-400 shadow-lg shadow-pink-500/20"
+//                     : "border-white/10 bg-black/30 text-gray-400 hover:border-pink-500/40"
+//                 }`}
+//               >
+
 //                 Candidate
-//               </option>
 
-//               <option value="recruiter">
+//               </button>
+
+//               {/* RECRUITER */}
+//               <button
+//                 type="button"
+//                 onClick={() =>
+//                   setFormData({
+//                     ...formData,
+//                     role: "recruiter",
+//                   })
+//                 }
+//                 className={`rounded-2xl border px-5 py-4 font-semibold transition-all duration-300
+
+//                 ${
+//                   formData.role ===
+//                   "recruiter"
+//                     ? "border-purple-500 bg-purple-500/20 text-purple-400 shadow-lg shadow-purple-500/20"
+//                     : "border-white/10 bg-black/30 text-gray-400 hover:border-purple-500/40"
+//                 }`}
+//               >
+
 //                 Recruiter
-//               </option>
 
-//             </select>
+//               </button>
+
+//             </div>
+
+//             {/* ROLE DESCRIPTION */}
+//             <p className="mt-3 text-sm text-gray-500">
+
+//               {formData.role ===
+//               "candidate"
+//                 ? "Practice interviews and track your growth."
+//                 : "Hire and manage talented candidates."}
+
+//             </p>
 
 //           </div>
 
@@ -265,19 +336,19 @@
 //           <button
 //             type="submit"
 //             disabled={loading}
-//             className="w-full rounded-2xl bg-white py-4 font-bold text-black transition hover:scale-[1.02] disabled:opacity-50"
+//             className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
 //           >
 
 //             {loading
 //               ? "Creating Account..."
-//               : "Create Account"}
+//               : "Signup"}
 
 //           </button>
 
 //         </form>
 
-//         {/* FOOTER */}
-//         <p className="mt-8 text-center text-gray-400">
+//         {/* LOGIN */}
+//         <p className="mt-8 text-center text-gray-500">
 
 //           Already have an account?{" "}
 
@@ -285,7 +356,9 @@
 //             href="/login"
 //             className="text-pink-400 hover:text-pink-300"
 //           >
+
 //             Login
+
 //           </Link>
 
 //         </p>
@@ -293,51 +366,46 @@
 //       </div>
 
 //     </main>
+
 //   );
+
 // }
 
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import API from "@/services/api";
+import { useState } from "react";
+
+import API from "@/lib/api";
 
 export default function SignupPage() {
 
-  const router = useRouter();
-
-  // REDIRECT IF LOGGED IN
-  useEffect(() => {
-
-    const token = localStorage.getItem("token");
-
-    if (token) {
-
-      router.replace("/");
-
-    }
-
-  }, [router]);
-
   // FORM STATE
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "candidate",
-  });
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      email: "",
+      password: "",
+      role: "candidate",
+    });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
   // HANDLE INPUT
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<
+      HTMLInputElement
+    >
   ) => {
 
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
 
   };
@@ -349,71 +417,100 @@ export default function SignupPage() {
 
     e.preventDefault();
 
+    setError("");
+
     try {
 
       setLoading(true);
 
-      // API REQUEST
-      const response = await API.post(
-        "/signup",
-        formData
+      // CLEAR OLD SESSION
+      await API.post(
+        "/logout"
       );
 
-      // SAVE TOKEN
-      localStorage.setItem(
-        "token",
-        response.data.access_token
+      // CLEAR OLD STORAGE
+      localStorage.clear();
+
+      // SIGNUP REQUEST
+      const response =
+        await API.post(
+          "/signup",
+          formData
+        );
+
+      const data =
+        response.data;
+
+      console.log(
+        "SIGNUP RESPONSE:",
+        data
       );
 
       // SAVE USER
       localStorage.setItem(
         "user",
-        JSON.stringify(response.data.user)
+        JSON.stringify(data.user)
       );
 
-      // NEW USER
+      // NEW USER FLAG
       localStorage.setItem(
         "isNewUser",
         "true"
       );
 
-      alert("Signup successful!");
+      // REDIRECT
+      setTimeout(() => {
 
-      // REDIRECT TO CANDIDATE DASHBOARD
-      router.push(
-        "/dashboard/candidate"
-      );
+        // ADMIN
+        if (
+          data.user.role ===
+          "admin"
+        ) {
+
+          window.location.href =
+            "/dashboard/admin";
+
+        }
+
+        // RECRUITER
+        else if (
+          data.user.role ===
+          "recruiter"
+        ) {
+
+          window.location.href =
+            "/dashboard/recruiter";
+
+        }
+
+        // CANDIDATE
+        else {
+
+          window.location.href =
+            "/dashboard/candidate";
+
+        }
+
+      }, 300);
 
     } catch (error: any) {
 
-      console.log(error);
+      console.log(
+        "SIGNUP ERROR:",
+        error
+      );
 
-      const errorMessage =
+      setError(
         error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        "Signup failed";
-
-      alert(errorMessage);
-
-      // EMAIL EXISTS
-      if (
-        errorMessage ===
-        "Email already registered"
-      ) {
-
-        setTimeout(() => {
-
-          router.push("/login");
-
-        }, 1000);
-
-      }
+        "Server connection error"
+      );
 
     } finally {
 
       setLoading(false);
 
     }
+
   };
 
   return (
@@ -424,20 +521,31 @@ export default function SignupPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-pink-500/20 blur-[150px] rounded-full" />
 
       {/* CARD */}
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl">
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
 
         {/* HEADER */}
         <div className="mb-8 text-center">
 
           <h1 className="text-5xl font-black">
-            Candidate Signup
+            Create Account
           </h1>
 
           <p className="mt-3 text-gray-400">
-            Start your AI-powered career preparation journey.
+            Start your AI-powered career journey.
           </p>
 
         </div>
+
+        {/* ERROR */}
+        {error && (
+
+          <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
+
+            {error}
+
+          </div>
+
+        )}
 
         {/* FORM */}
         <form
@@ -457,9 +565,9 @@ export default function SignupPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your full name"
-              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+              placeholder="Enter full name"
               required
+              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
             />
 
           </div>
@@ -476,9 +584,9 @@ export default function SignupPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+              placeholder="Enter email"
               required
+              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
             />
 
           </div>
@@ -495,10 +603,79 @@ export default function SignupPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create password"
-              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
+              placeholder="Enter password"
               required
+              className="w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-pink-500"
             />
+
+          </div>
+
+          {/* ROLE */}
+          <div>
+
+            <label className="mb-3 block text-sm text-gray-300">
+              Select Role
+            </label>
+
+            <div className="grid grid-cols-2 gap-4">
+
+              {/* CANDIDATE */}
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    role: "candidate",
+                  })
+                }
+                className={`rounded-2xl border px-5 py-4 font-semibold transition-all duration-300
+
+                ${
+                  formData.role ===
+                  "candidate"
+                    ? "border-pink-500 bg-pink-500/20 text-pink-400 shadow-lg shadow-pink-500/20"
+                    : "border-white/10 bg-black/30 text-gray-400 hover:border-pink-500/40"
+                }`}
+              >
+
+                Candidate
+
+              </button>
+
+              {/* RECRUITER */}
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    role: "recruiter",
+                  })
+                }
+                className={`rounded-2xl border px-5 py-4 font-semibold transition-all duration-300
+
+                ${
+                  formData.role ===
+                  "recruiter"
+                    ? "border-purple-500 bg-purple-500/20 text-purple-400 shadow-lg shadow-purple-500/20"
+                    : "border-white/10 bg-black/30 text-gray-400 hover:border-purple-500/40"
+                }`}
+              >
+
+                Recruiter
+
+              </button>
+
+            </div>
+
+            {/* ROLE DESCRIPTION */}
+            <p className="mt-3 text-sm text-gray-500">
+
+              {formData.role ===
+              "candidate"
+                ? "Practice interviews and track your growth."
+                : "Hire and manage talented candidates."}
+
+            </p>
 
           </div>
 
@@ -506,35 +683,19 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-white py-4 font-bold text-black transition hover:scale-[1.02] disabled:opacity-50"
+            className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
           >
 
             {loading
               ? "Creating Account..."
-              : "Create Candidate Account"}
+              : "Signup"}
 
           </button>
 
         </form>
 
-        {/* RECRUITER SECTION */}
-        <div className="mt-8 border-t border-white/10 pt-6 text-center">
-
-          <p className="text-gray-400">
-            Hiring for your company?
-          </p>
-
-          <Link
-            href="/recruiter/signup"
-            className="mt-4 inline-block rounded-2xl bg-blue-500 px-6 py-3 font-bold text-white hover:bg-blue-600 transition"
-          >
-            Recruiter Signup
-          </Link>
-
-        </div>
-
         {/* LOGIN */}
-        <p className="mt-8 text-center text-gray-400">
+        <p className="mt-8 text-center text-gray-500">
 
           Already have an account?{" "}
 
@@ -542,7 +703,9 @@ export default function SignupPage() {
             href="/login"
             className="text-pink-400 hover:text-pink-300"
           >
+
             Login
+
           </Link>
 
         </p>
@@ -550,5 +713,7 @@ export default function SignupPage() {
       </div>
 
     </main>
+
   );
+
 }

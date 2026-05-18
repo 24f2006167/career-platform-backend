@@ -1,12 +1,21 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.auth_router import router as auth_router
 from sqlalchemy.orm import Session
+
+from app.routers.auth_router import router as auth_router
+
 from app.models.user import User
 from app.utils.security import hash_password
-from app.core.database import SessionLocal
+
+from app.core.database import (
+    SessionLocal,
+    Base,
+    engine
+)
+
+# CREATE DATABASE TABLES
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -21,6 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# CREATE ADMIN
 def create_admin():
 
     db: Session = SessionLocal()
@@ -60,14 +70,17 @@ def create_admin():
 
     db.close()
 
+# RUN ADMIN CREATION
+create_admin()
 
 # ROUTERS
 app.include_router(auth_router)
 
+# HOME
 @app.get("/")
 def home():
-    return {
-        "message": "Backend Running Successfully"
-    }
 
-create_admin()
+    return {
+        "message":
+        "Backend Running Successfully"
+    }
