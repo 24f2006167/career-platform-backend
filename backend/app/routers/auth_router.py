@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.dependencies.auth_dependency import (
     get_current_user,
@@ -16,9 +16,59 @@ from app.utils.security import (
 router = APIRouter()
 
 
+# @router.post("/signup")
+# def signup(user: UserCreate, db: Session = Depends(get_db)):
+
+#     new_user = User(
+#         name=user.name,
+#         email=user.email,
+#         password=hash_password(user.password),
+#         role=user.role
+#     )
+
+#     db.add(new_user)
+
+#     db.commit()
+
+#     db.refresh(new_user)
+
+#     access_token = create_access_token(
+#     data={
+#         "sub": new_user.email
+#     }
+# )
+    
+#     return {
+#     "message": "Login successful",
+#     "access_token": access_token,
+#     "token_type": "bearer"
+#     }
+
 @router.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
 
+    if user.role == "admin":
+
+        raise HTTPException(
+            status_code=403,
+            detail="Admin account cannot be created publicly"
+        )
+
+    # CHECK IF EMAIL ALREADY EXISTS
+    existing_user = (
+        db.query(User)
+        .filter(User.email == user.email)
+        .first()
+    )
+
+    if existing_user:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    # CREATE USER
     new_user = User(
         name=user.name,
         email=user.email,
@@ -28,20 +78,28 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
     db.add(new_user)
 
+    # SAVE TO DATABASE
     db.commit()
 
     db.refresh(new_user)
 
+    # CREATE TOKEN
     access_token = create_access_token(
-    data={
-        "sub": new_user.email
-    }
-)
-    
+        data={
+            "sub": new_user.email
+        }
+    )
+
+    # RETURN RESPONSE
     return {
-    "message": "Login successful",
-    "access_token": access_token,
-    "token_type": "bearer"
+        "message": "Signup successful",
+        "access_token": access_token,
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            "role": new_user.role
+        }
     }
 
 @router.post("/login")
