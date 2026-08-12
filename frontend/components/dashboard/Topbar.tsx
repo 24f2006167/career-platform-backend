@@ -1,156 +1,119 @@
-
-
-// "use client";
-
-// import { useRouter } from "next/navigation";
-
-// export default function Topbar({
-//   user,
-// }: any) {
-
-//   const router = useRouter();
-
-//   // LOGOUT
-//   const handleLogout = async () => {
-
-//     try {
-
-//       // BACKEND LOGOUT
-//       await fetch(
-//         "http://127.0.0.1:8000/logout",
-//         {
-//           method: "POST",
-
-//           credentials: "include",
-//         }
-//       );
-
-//     } catch (error) {
-
-//       console.log(
-//         "Logout Error:",
-//         error
-//       );
-
-//     }
-
-//     // CLEAR STORAGE
-//     localStorage.removeItem("user");
-
-//     localStorage.removeItem("isNewUser");
-
-//     // REDIRECT
-//     window.location.href =
-//       "/login";
-
-//   };
-
-//   return (
-
-//     <div className="flex items-center justify-between border-b border-white/10 px-8 py-5">
-
-//       {/* USER INFO */}
-//       <div>
-
-//         <h2 className="text-2xl font-bold">
-
-//           Welcome {user?.name} 👋
-
-//         </h2>
-
-//         <p className="text-gray-400">
-
-//           Role: {user?.role}
-
-//         </p>
-
-//       </div>
-
-//       {/* LOGOUT BUTTON */}
-//       <button
-//         onClick={handleLogout}
-//         className="rounded-2xl bg-red-500 px-6 py-3 font-bold hover:bg-red-600 transition"
-//       >
-
-//         Logout
-
-//       </button>
-
-//     </div>
-
-//   );
-
-// }
-
 "use client";
 
-import API from "@/lib/api";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { User } from "@/types/user";
+import { logoutUser } from "@/services/auth";
 
-export default function Topbar({
-  user,
-}: any) {
+interface TopbarProps {
+  user: User;
+}
 
-  // LOGOUT
-  const handleLogout = async () => {
+export default function Topbar({ user }: TopbarProps) {
+  const router = useRouter();
+  const role = (user.role || "candidate").toLowerCase();
 
-    try {
-
-      // BACKEND LOGOUT
-      await API.post(
-        "/logout"
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Logout Error:",
-        error
-      );
-
-    }
-
-    // CLEAR STORAGE
-    localStorage.clear();
-
-    // REDIRECT
-    window.location.href =
-      "/login";
-
+  const handleLogout = () => {
+    logoutUser();
+    router.replace("/login");
   };
 
+  const dashboardPath =
+    role === "admin"
+      ? "/dashboard/admin"
+      : role === "recruiter"
+      ? "/dashboard/recruiter"
+      : "/dashboard/candidate";
+
+  const badgeText =
+    role === "admin"
+      ? "Admin Control Center"
+      : role === "recruiter"
+      ? "Recruiter Workspace"
+      : "AI Career Dashboard";
+
+  const welcomeTitle =
+    role === "admin"
+      ? "Manage Nexvora AI Platform"
+      : role === "recruiter"
+      ? "Manage Hiring Workspace"
+      : `Welcome, ${user.full_name || user.username || "User"}`;
+
+  const actionLinks =
+    role === "admin"
+      ? [
+          { name: "Dashboard", href: dashboardPath },
+          { name: "Job Roles", href: "/dashboard/admin/roles" },
+          { name: "Users", href: "/dashboard/admin/users" },
+          { name: "Skills", href: "/dashboard/admin/skills" },
+          { name: "Categories", href: "/dashboard/admin/categories" },
+        ]
+      : role === "recruiter"
+      ? [
+          { name: "Dashboard", href: dashboardPath },
+          { name: "Candidates", href: "/dashboard/recruiter/candidates" },
+          { name: "Jobs", href: "/dashboard/recruiter/jobs" },
+        ]
+      : [
+          { name: "Dashboard", href: dashboardPath },
+          { name: "Choose Role", href: "/select-role" },
+          { name: "Learning Studio", href: "/ai-learning" },
+        ];
+
   return (
+    <header className="sticky top-0 z-30 border-b border-purple-500/20 bg-black/75 px-4 py-4 text-white shadow-[0_0_35px_rgba(168,85,247,0.12)] backdrop-blur-2xl sm:px-6">
+      <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
+        <div className="min-w-0">
+          <p className="inline-flex rounded-full border border-purple-400/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-300">
+            {badgeText}
+          </p>
 
-    <div className="flex items-center justify-between border-b border-white/10 px-8 py-5">
+          <h1 className="mt-2 max-w-[520px] truncate text-xl font-black tracking-tight sm:text-2xl">
+            {welcomeTitle}
+          </h1>
+        </div>
 
-      {/* USER INFO */}
-      <div>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-end">
+          <nav className="flex max-w-full flex-wrap gap-2">
+            {actionLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-2xl border border-purple-400/20 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-200 transition hover:border-purple-400/50 hover:bg-purple-500/20"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
 
-        <h2 className="text-2xl font-bold">
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right md:block">
+              <p className="max-w-[240px] truncate text-sm font-semibold">
+                {user.email}
+              </p>
 
-          Welcome {user?.name} 👋
+              <p className="text-xs capitalize text-gray-400">
+                {role === "admin"
+                  ? "Platform Admin"
+                  : role === "recruiter"
+                  ? "Recruiter"
+                  : "Candidate"}
+              </p>
+            </div>
 
-        </h2>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-purple-400/30 bg-purple-500/10 text-lg font-bold uppercase shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              {(user.full_name || user.username || "U").charAt(0)}
+            </div>
 
-        <p className="text-gray-400">
-
-          Role: {user?.role}
-
-        </p>
-
+            <button
+              onClick={handleLogout}
+              className="shrink-0 rounded-2xl border border-white/10 bg-white px-4 py-2 text-sm font-bold text-black transition hover:scale-105 hover:bg-white/90"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
-
-      {/* LOGOUT BUTTON */}
-      <button
-        onClick={handleLogout}
-        className="rounded-2xl bg-red-500 px-6 py-3 font-bold hover:bg-red-600 transition"
-      >
-
-        Logout
-
-      </button>
-
-    </div>
-
+    </header>
   );
-
 }

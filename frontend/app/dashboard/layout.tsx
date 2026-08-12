@@ -1,288 +1,84 @@
-
-// "use client";
-
-// import { useEffect, useState } from "react";
-
-// import Sidebar from "@/components/dashboard/Sidebar";
-// import Topbar from "@/components/dashboard/Topbar";
-
-// import API from "@/lib/api";
-
-// export default function DashboardLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-
-//   const [user, setUser] =
-//     useState<any>(null);
-
-//   const [loading, setLoading] =
-//     useState(true);
-
-//   // VALIDATE SESSION
-//   useEffect(() => {
-
-//     const fetchUser = async () => {
-
-//       try {
-
-//         // GET CURRENT USER
-//         const response =
-//           await API.get("/me");
-
-//         const data =
-//           response.data;
-
-//         console.log(
-//           "CURRENT USER:",
-//           data
-//         );
-
-//         // SAVE USER
-//         setUser(data);
-
-//         localStorage.setItem(
-//           "user",
-//           JSON.stringify(data)
-//         );
-
-//       } catch (error) {
-
-//         console.log(
-//           "Dashboard Auth Error:",
-//           error
-//         );
-
-//         // CLEAR STORAGE
-//         localStorage.clear();
-
-//         // REDIRECT
-//         window.location.href =
-//           "/login";
-
-//       } finally {
-
-//         setLoading(false);
-
-//       }
-
-//     };
-
-//     fetchUser();
-
-//   }, []);
-
-//   // LOADING
-//   if (loading) {
-
-//     return (
-
-//       <div className="min-h-screen bg-black flex items-center justify-center text-white text-2xl">
-
-//         Loading Dashboard...
-
-//       </div>
-
-//     );
-
-//   }
-
-//   return (
-
-//     <div className="min-h-screen bg-black text-white flex">
-
-//       {/* SIDEBAR */}
-//       <Sidebar user={user} />
-
-//       {/* MAIN */}
-//       <div className="flex-1 flex flex-col">
-
-//         {/* TOPBAR */}
-//         <Topbar user={user} />
-
-//         {/* CONTENT */}
-//         <main className="p-8">
-
-//           {children}
-
-//         </main>
-
-//       </div>
-
-//     </div>
-
-//   );
-
-// }
-
-
-
 "use client";
 
 import { useEffect, useState } from "react";
-
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import Sidebar from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
 
-import API from "@/lib/api";
+import { getCurrentUser } from "@/services/auth";
+import { User } from "@/types/user";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const pathname =
-    usePathname();
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  const [user, setUser] =
-    useState<any>(null);
+  const getDashboardPath = (role?: string) => {
+    const cleanRole = (role || "candidate").toLowerCase();
 
-  const [loading, setLoading] =
-    useState(true);
+    if (cleanRole === "admin") return "/dashboard/admin";
+    if (cleanRole === "recruiter") return "/dashboard/recruiter";
 
-  // VALIDATE SESSION
+    return "/dashboard/candidate";
+  };
+
   useEffect(() => {
-
-    const fetchUser = async () => {
-
+    const checkUser = async () => {
       try {
+        const token = localStorage.getItem("token");
 
-        // GET CURRENT USER
-        const response =
-          await API.get("/me");
-
-        const data =
-          response.data;
-
-        console.log(
-          "CURRENT USER:",
-          data
-        );
-
-        // SAVE USER
-        setUser(data);
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data)
-        );
-
-        // ROLE-BASED ROUTE PROTECTION
-
-        // ADMIN
-        if (
-          pathname.startsWith(
-            "/dashboard/admin"
-          ) &&
-          data.role !== "admin"
-        ) {
-
-          window.location.href =
-            `/dashboard/${data.role}`;
-
+        if (!token) {
+          router.replace("/login");
           return;
-
         }
 
-        // RECRUITER
-        if (
-          pathname.startsWith(
-            "/dashboard/recruiter"
-          ) &&
-          data.role !== "recruiter"
-        ) {
+        const currentUser = await getCurrentUser();
 
-          window.location.href =
-            `/dashboard/${data.role}`;
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
 
-          return;
-
+        if (pathname === "/dashboard") {
+          router.replace(getDashboardPath(currentUser.role));
         }
-
-        // CANDIDATE
-        if (
-          pathname.startsWith(
-            "/dashboard/candidate"
-          ) &&
-          data.role !== "candidate"
-        ) {
-
-          window.location.href =
-            `/dashboard/${data.role}`;
-
-          return;
-
-        }
-
       } catch (error) {
+        console.error("Dashboard auth check failed:", error);
 
-        console.log(
-          "Dashboard Auth Error:",
-          error
-        );
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
 
-        // CLEAR STORAGE
-        localStorage.clear();
-
-        // REDIRECT
-        window.location.href =
-          "/login";
-
+        router.replace("/login");
       } finally {
-
-        setLoading(false);
-
+        setCheckingAuth(false);
       }
-
     };
 
-    fetchUser();
+    checkUser();
+  }, [router, pathname]);
 
-  }, [pathname]);
-
-  // LOADING
-  if (loading) {
-
+  if (checkingAuth) {
     return (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white">
+        <div className="absolute h-[420px] w-[420px] rounded-full bg-purple-500/20 blur-3xl" />
 
-      <div className="min-h-screen bg-black flex items-center justify-center text-white text-2xl">
-
-        Loading Dashboard...
-
+        <div className="relative rounded-3xl border border-white/10 bg-white/5 px-8 py-6 shadow-2xl backdrop-blur-xl">
+          Checking AI authentication...
+        </div>
       </div>
-
     );
-
   }
 
+  if (!user) return null;
+
   return (
-
-    <div className="min-h-screen bg-black text-white flex">
-
-      {/* SIDEBAR */}
-      <Sidebar user={user} />
-
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col">
-
-        {/* TOPBAR */}
-        <Topbar user={user} />
-
-        {/* CONTENT */}
-        <main className="p-8">
-
-          {children}
-
-        </main>
-
-      </div>
-
+    <div className="min-h-screen bg-[#08090e] text-white">
+      {children}
     </div>
-
   );
-
 }

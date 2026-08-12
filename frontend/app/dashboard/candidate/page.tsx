@@ -1,429 +1,355 @@
-
-// "use client";
-
-// import { useEffect, useState } from "react";
-
-// export default function DashboardPage() {
-
-//   const [loading, setLoading] =
-//     useState(true);
-
-//   const [user, setUser] =
-//     useState<any>(null);
-
-//   const [isNewUser, setIsNewUser] =
-//     useState(false);
-
-//   // LOAD USER
-//   useEffect(() => {
-
-//     const storedUser =
-//       localStorage.getItem("user");
-
-//     // NO USER
-//     if (!storedUser) {
-
-//       window.location.href =
-//         "/login";
-
-//       return;
-
-//     }
-
-//     try {
-
-//       const parsedUser =
-//         JSON.parse(storedUser);
-
-//       setUser(parsedUser);
-
-//       setIsNewUser(
-//         localStorage.getItem(
-//           "isNewUser"
-//         ) === "true"
-//       );
-
-//     } catch (error) {
-
-//       console.log(
-//         "User Parse Error:",
-//         error
-//       );
-
-//       window.location.href =
-//         "/login";
-
-//       return;
-
-//     }
-
-//     setLoading(false);
-
-//   }, []);
-
-//   // LOADING
-//   if (loading) {
-
-//     return (
-
-//       <main className="min-h-screen bg-black text-white flex items-center justify-center text-xl">
-
-//         Loading Dashboard...
-
-//       </main>
-
-//     );
-
-//   }
-
-//   return (
-
-//     <main className="min-h-screen bg-black text-white px-10 py-16 relative overflow-hidden">
-
-//       {/* BACKGROUND */}
-//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/20 blur-[180px] rounded-full" />
-
-//       {/* CONTENT */}
-//       <div className="relative">
-
-//         {/* HEADER */}
-//         <div className="mb-14">
-
-//           <h1 className="text-7xl font-black">
-
-//             Dashboard
-
-//           </h1>
-
-//           {/* GREETING */}
-//           <p className="mt-5 text-3xl text-gray-300">
-
-//             {isNewUser
-//               ? "Welcome"
-//               : "Welcome back"}
-
-//             {" "}
-
-//             <span className="text-purple-400 font-bold">
-
-//               {user?.name || "User"}
-
-//             </span>
-
-//             {isNewUser
-//               ? " 🎉"
-//               : " 👋"}
-
-//           </p>
-
-//           {/* MESSAGE */}
-//           <p className="mt-3 text-lg text-gray-400">
-
-//             {isNewUser
-//               ? "Your account has been created successfully."
-//               : "Ready to continue your preparation journey?"}
-
-//           </p>
-
-//           {/* ROLE */}
-//           <p className="mt-4 text-lg text-gray-400">
-
-//             Role:{" "}
-
-//             <span className="capitalize text-pink-400 font-semibold">
-
-//               {user?.role || "Candidate"}
-
-//             </span>
-
-//           </p>
-
-//         </div>
-
-//         {/* CARDS */}
-//         <div className="grid gap-8 md:grid-cols-3">
-
-//           {/* CARD 1 */}
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-
-//             <h2 className="text-3xl font-bold">
-
-//               Practice Questions
-
-//             </h2>
-
-//             <p className="mt-4 text-gray-400 text-lg">
-
-//               Solve AI-generated interview questions.
-
-//             </p>
-
-//           </div>
-
-//           {/* CARD 2 */}
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-
-//             <h2 className="text-3xl font-bold">
-
-//               Mock Interviews
-
-//             </h2>
-
-//             <p className="mt-4 text-gray-400 text-lg">
-
-//               Practice real interview rounds.
-
-//             </p>
-
-//           </div>
-
-//           {/* CARD 3 */}
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-
-//             <h2 className="text-3xl font-bold">
-
-//               Track Progress
-
-//             </h2>
-
-//             <p className="mt-4 text-gray-400 text-lg">
-
-//               Monitor your preparation journey.
-
-//             </p>
-
-//           </div>
-
-//         </div>
-
-//       </div>
-
-//     </main>
-
-//   );
-
-// }
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import Sidebar from "@/components/dashboard/Sidebar";
+import Link from "next/link";
 
-export default function CandidateDashboardPage() {
+interface UserProfile {
+  full_name: string;
+  username: string;
+  nexvora_rating: number;
+  problems_solved: number;
+  easy_solved: number;
+  medium_solved: number;
+  hard_solved: number;
+  streak: number;
+  readiness_score: number;
+  target_role: string;
+  experience_level: string;
+}
 
-  const [user, setUser] =
-    useState<any>(null);
+const SKILL_AREAS = [
+  { name: "DSA", score: 62, color: "#6366f1" },
+  { name: "Programming", score: 78, color: "#8b5cf6" },
+  { name: "DBMS", score: 71, color: "#06b6d4" },
+  { name: "OS", score: 54, color: "#10b981" },
+  { name: "Networks", score: 42, color: "#f59e0b" },
+  { name: "System Design", score: 31, color: "#ef4444" },
+];
 
-  const [loading, setLoading] =
-    useState(true);
+const DAILY_GOALS = [
+  { id: 1, label: "Solve 1 DSA Problem", done: false, icon: "💻" },
+  { id: 2, label: "20 min Learning", done: false, icon: "📚" },
+  { id: 3, label: "1 CS Concept Quiz", done: false, icon: "🧠" },
+  { id: 4, label: "Review Yesterday's Solution", done: false, icon: "🔍" },
+];
 
-  const [isNewUser, setIsNewUser] =
-    useState(false);
+const RECOMMENDED = [
+  { type: "Problem", title: "Graph BFS/DFS", difficulty: "medium", href: "/problems/graph-bfs", why: "Your weakest topic" },
+  { type: "Project", title: "Design a URL Shortener", difficulty: "intermediate", href: "/projects/url-shortener", why: "Strengthens System Design" },
+  { type: "Learn", title: "OS Process Management", difficulty: "concept", href: "/learn/os/processes", why: "54% proficiency — needs work" },
+];
 
-  // LOAD USER
+const RECENT_ACTIVITY = [
+  { label: "Two Sum", status: "accepted", time: "2h ago", rating: "+8" },
+  { label: "Valid Parentheses", status: "wrong_answer", time: "5h ago", rating: "" },
+  { label: "Binary Search", status: "accepted", time: "1d ago", rating: "+8" },
+];
+
+export default function CandidateDashboard() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [goals, setGoals] = useState(DAILY_GOALS);
+  const [greeting, setGreeting] = useState("Good morning");
+
   useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 12 && hour < 17) setGreeting("Good afternoon");
+    else if (hour >= 17) setGreeting("Good evening");
 
-    try {
-
-      const storedUser =
-        localStorage.getItem(
-          "user"
-        );
-
-      // NO USER
-      if (!storedUser) {
-
-        window.location.href =
-          "/login";
-
-        return;
-
-      }
-
-      const parsedUser =
-        JSON.parse(storedUser);
-
-      // ROLE PROTECTION
-      if (
-        parsedUser.role !==
-        "candidate"
-      ) {
-
-        window.location.href =
-          `/dashboard/${parsedUser.role}`;
-
-        return;
-
-      }
-
-      setUser(parsedUser);
-
-      setIsNewUser(
-        localStorage.getItem(
-          "isNewUser"
-        ) === "true"
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Dashboard Error:",
-        error
-      );
-
-      localStorage.clear();
-
-      window.location.href =
-        "/login";
-
-      return;
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
+    fetchProfile();
   }, []);
 
-  // LOADING
-  if (loading) {
-
-    return (
-
-      <main className="min-h-screen bg-black text-white flex items-center justify-center text-xl">
-
-        Loading Dashboard...
-
-      </main>
-
-    );
-
+  async function fetchProfile() {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      const res = await fetch("http://127.0.0.1:8000/api/v1/profile/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setProfile(await res.json());
+    } catch {
+      // Use demo data
+      setProfile({
+        full_name: "Shitanshu",
+        username: "shitanshu",
+        nexvora_rating: 1200,
+        problems_solved: 0,
+        easy_solved: 0,
+        medium_solved: 0,
+        hard_solved: 0,
+        streak: 0,
+        readiness_score: 0,
+        target_role: "Software Engineer",
+        experience_level: "beginner",
+      });
+    }
   }
 
+  const weakestSkills = [...SKILL_AREAS].sort((a, b) => a.score - b.score).slice(0, 3);
+  const readiness = profile?.readiness_score ?? 36;
+  const circumference = 2 * Math.PI * 54;
+  const dashOffset = circumference - (readiness / 100) * circumference;
+
   return (
-
-    <main className="min-h-screen bg-black text-white px-10 py-16 relative overflow-hidden">
-
-      {/* BACKGROUND */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/20 blur-[180px] rounded-full" />
-
-      {/* CONTENT */}
-      <div className="relative">
-
-        {/* HEADER */}
-        <div className="mb-14">
-
-          <h1 className="text-7xl font-black">
-
-            Dashboard
-
-          </h1>
-
-          {/* GREETING */}
-          <p className="mt-5 text-3xl text-gray-300">
-
-            {isNewUser
-              ? "Welcome"
-              : "Welcome back"}
-
-            {" "}
-
-            <span className="text-purple-400 font-bold">
-
-              {user?.name || "User"}
-
-            </span>
-
-            {isNewUser
-              ? " 🎉"
-              : " 👋"}
-
-          </p>
-
-          {/* MESSAGE */}
-          <p className="mt-3 text-lg text-gray-400">
-
-            {isNewUser
-              ? "Your account has been created successfully."
-              : "Ready to continue your preparation journey?"}
-
-          </p>
-
-          {/* ROLE */}
-          <p className="mt-4 text-lg text-gray-400">
-
-            Role:{" "}
-
-            <span className="capitalize text-pink-400 font-semibold">
-
-              {user?.role || "Candidate"}
-
-            </span>
-
-          </p>
-
+    <div className="layout-sidebar">
+      <Sidebar />
+      <div className="main-content">
+        <div className="topbar">
+          <div>
+            <h1 style={{ fontSize: "15px", fontWeight: "600" }}>Dashboard</h1>
+          </div>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "5px 12px", borderRadius: "999px",
+              background: "rgba(251,146,60,0.1)", border: "1px solid rgba(251,146,60,0.2)",
+              fontSize: "13px", color: "#fb923c", fontWeight: "600",
+            }}>
+              🔥 {profile?.streak ?? 0} day streak
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "5px 12px", borderRadius: "999px",
+              background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)",
+              fontSize: "13px", color: "#a5b4fc", fontWeight: "600",
+            }}>
+              ⭐ {profile?.nexvora_rating ?? 1200}
+            </div>
+          </div>
         </div>
 
-        {/* CARDS */}
-        <div className="grid gap-8 md:grid-cols-3">
-
-          {/* CARD 1 */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-
-            <h2 className="text-3xl font-bold">
-
-              Practice Questions
-
+        <div style={{ padding: "24px" }}>
+          {/* Welcome header */}
+          <div style={{ marginBottom: "28px" }}>
+            <h2 style={{ fontSize: "26px", fontWeight: "800", letterSpacing: "-0.02em" }}>
+              {greeting}, {profile?.full_name?.split(" ")[0] ?? "there"} 👋
             </h2>
-
-            <p className="mt-4 text-gray-400 text-lg">
-
-              Solve AI-generated interview questions.
-
+            <p style={{ color: "var(--nex-text-2)", marginTop: "4px", fontSize: "14px" }}>
+              {profile?.target_role ? `Target: ${profile.target_role}` : "Set your target role to get a personalized roadmap"}
             </p>
-
           </div>
 
-          {/* CARD 2 */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+          {/* Top row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+            {/* SDE Readiness */}
+            <div className="stat-card" style={{ gridRow: "span 1", display: "flex", gap: "20px", alignItems: "center" }}>
+              <div className="circular-progress">
+                <svg width="120" height="120" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="var(--nex-border)" strokeWidth="8" />
+                  <circle
+                    cx="60" cy="60" r="54" fill="none"
+                    stroke="url(#readinessGrad)" strokeWidth="8"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    strokeLinecap="round"
+                    style={{ transition: "stroke-dashoffset 1s ease" }}
+                  />
+                  <defs>
+                    <linearGradient id="readinessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div style={{ position: "absolute", textAlign: "center" }}>
+                  <div style={{ fontSize: "24px", fontWeight: "900", lineHeight: "1" }}>{readiness}%</div>
+                  <div style={{ fontSize: "10px", color: "var(--nex-text-3)", fontWeight: "600" }}>READY</div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "4px" }}>SDE Readiness</div>
+                <div style={{ fontSize: "13px", color: "var(--nex-text-2)", lineHeight: "1.5" }}>
+                  Keep solving problems<br />to increase your score
+                </div>
+                <Link href="/roadmap" className="btn-primary btn-sm" style={{ display: "inline-flex", marginTop: "12px" }}>
+                  View Roadmap
+                </Link>
+              </div>
+            </div>
 
-            <h2 className="text-3xl font-bold">
+            {/* Problems Stats */}
+            <div className="stat-card">
+              <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "14px" }}>
+                PROBLEMS SOLVED
+              </div>
+              <div style={{ fontSize: "40px", fontWeight: "900", letterSpacing: "-0.03em", marginBottom: "16px" }}>
+                {profile?.problems_solved ?? 0}
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                {[
+                  { label: "Easy", val: profile?.easy_solved ?? 0, color: "var(--difficulty-easy)" },
+                  { label: "Med", val: profile?.medium_solved ?? 0, color: "var(--difficulty-medium)" },
+                  { label: "Hard", val: profile?.hard_solved ?? 0, color: "var(--difficulty-hard)" },
+                ].map((d) => (
+                  <div key={d.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "20px", fontWeight: "800", color: d.color }}>{d.val}</div>
+                    <div style={{ fontSize: "11px", color: "var(--nex-text-3)" }}>{d.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="progress-bar" style={{ marginTop: "16px" }}>
+                <div className="progress-fill" style={{ width: `${Math.min(100, (profile?.problems_solved ?? 0) / 5)}%` }} />
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--nex-text-3)", marginTop: "6px" }}>
+                0 / 500 problems to Grandmaster
+              </div>
+            </div>
 
-              Mock Interviews
-
-            </h2>
-
-            <p className="mt-4 text-gray-400 text-lg">
-
-              Practice real interview rounds.
-
-            </p>
-
+            {/* Daily Goals */}
+            <div className="stat-card">
+              <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "14px" }}>
+                TODAY'S GOALS
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {goals.map((goal) => (
+                  <div
+                    key={goal.id}
+                    style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+                    onClick={() => setGoals((gs) => gs.map((g) => g.id === goal.id ? { ...g, done: !g.done } : g))}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: "6px",
+                      border: `2px solid ${goal.done ? "var(--nex-success)" : "var(--nex-border)"}`,
+                      background: goal.done ? "var(--nex-success)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, transition: "all 0.2s", fontSize: "12px", color: "white",
+                    }}>
+                      {goal.done ? "✓" : ""}
+                    </div>
+                    <span style={{
+                      fontSize: "13px",
+                      color: goal.done ? "var(--nex-text-3)" : "var(--nex-text-1)",
+                      textDecoration: goal.done ? "line-through" : "none",
+                      transition: "all 0.2s",
+                    }}>
+                      {goal.icon} {goal.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: "12px" }}>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${(goals.filter((g) => g.done).length / goals.length) * 100}%` }} />
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--nex-text-3)", marginTop: "4px" }}>
+                  {goals.filter((g) => g.done).length}/{goals.length} completed
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* CARD 3 */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+          {/* Bottom row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+            {/* Skill Map / Weakness */}
+            <div className="stat-card">
+              <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "14px" }}>
+                SKILL PROFICIENCY
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {SKILL_AREAS.map((skill) => (
+                  <div key={skill.name}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "500" }}>{skill.name}</span>
+                      <span style={{ fontSize: "12px", color: "var(--nex-text-3)" }}>{skill.score}%</span>
+                    </div>
+                    <div className="progress-bar" style={{ height: "5px" }}>
+                      <div style={{
+                        height: "100%", borderRadius: "999px",
+                        width: `${skill.score}%`,
+                        background: `linear-gradient(90deg, ${skill.color}99, ${skill.color})`,
+                        transition: "width 1s ease",
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            <h2 className="text-3xl font-bold">
+            {/* Weakest skills + recommendations */}
+            <div className="stat-card">
+              <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "14px" }}>
+                ⚠️ AREAS TO IMPROVE
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+                {weakestSkills.map((s) => (
+                  <div key={s.name} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "8px 12px", background: "rgba(239,68,68,0.06)",
+                    border: "1px solid rgba(239,68,68,0.15)", borderRadius: "8px",
+                  }}>
+                    <span style={{ fontSize: "13px" }}>{s.name}</span>
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--nex-danger)" }}>{s.score}%</span>
+                  </div>
+                ))}
+              </div>
+              <Link href="/roadmap" style={{
+                display: "flex", alignItems: "center", gap: "6px", fontSize: "13px",
+                color: "var(--nex-primary)", textDecoration: "none", fontWeight: "500",
+              }}>
+                View personalized plan →
+              </Link>
+            </div>
 
-              Track Progress
+            {/* Recommended + Recent Activity */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Recommended */}
+              <div className="stat-card" style={{ flex: 1 }}>
+                <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "12px" }}>
+                  🎯 RECOMMENDED FOR YOU
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {RECOMMENDED.map((r) => (
+                    <Link key={r.title} href={r.href} style={{
+                      display: "flex", alignItems: "center", gap: "10px",
+                      padding: "8px 10px", borderRadius: "8px",
+                      background: "var(--nex-surface)", border: "1px solid var(--nex-border)",
+                      textDecoration: "none", color: "inherit",
+                      transition: "all 0.15s",
+                    }}>
+                      <div style={{
+                        width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                        background: r.type === "Problem" ? "var(--nex-primary)" :
+                          r.type === "Project" ? "var(--nex-success)" : "var(--nex-warning)",
+                      }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "500", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {r.title}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "var(--nex-text-3)" }}>{r.why}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
-            </h2>
-
-            <p className="mt-4 text-gray-400 text-lg">
-
-              Monitor your preparation journey.
-
-            </p>
-
+              {/* Recent activity */}
+              <div className="stat-card">
+                <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "12px" }}>
+                  RECENT SUBMISSIONS
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {RECENT_ACTIVITY.map((a) => (
+                    <div key={a.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "12px", minWidth: "20px" }}>
+                        {a.status === "accepted" ? "✅" : "❌"}
+                      </span>
+                      <span style={{ fontSize: "13px", flex: 1 }}>{a.label}</span>
+                      {a.rating && (
+                        <span style={{ fontSize: "12px", color: "var(--nex-success)", fontWeight: "600" }}>{a.rating}</span>
+                      )}
+                      <span style={{ fontSize: "11px", color: "var(--nex-text-3)" }}>{a.time}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/submissions" style={{
+                  display: "block", marginTop: "10px", fontSize: "12px",
+                  color: "var(--nex-text-3)", textDecoration: "none",
+                }}>View all →</Link>
+              </div>
+            </div>
           </div>
-
         </div>
-
       </div>
-
-    </main>
-
+    </div>
   );
-
 }

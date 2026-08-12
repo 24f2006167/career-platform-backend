@@ -1,17 +1,43 @@
-from fastapi import APIRouter, Depends
 
-from app.dependencies.auth_dependency import get_current_user
-from app.dependencies.role_checker import role_required
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.models.role import Role
+
+from app.dependencies.current_user import get_current_user
+from app.dependencies.role_guard import require_role
+
 
 router = APIRouter()
 
 
+@router.get("/roles")
+@router.get("/roles/")
+def get_public_roles(
+    db: Session = Depends(get_db)
+):
+    excluded_roles = ["admin", "candidate", "recruiter"]
+
+    roles = (
+        db.query(Role)
+        .filter(~Role.name.in_(excluded_roles))
+        .all()
+    )
+
+    return [
+        {
+            "id": str(role.id),
+            "name": role.name,
+            "description": role.description,
+        }
+        for role in roles
+    ]
+# PROTECTED DASHBOARD TEST ROUTES
 @router.get("/admin/dashboard")
 def admin_dashboard(
-    current_user = Depends(get_current_user),
-    allowed = Depends(role_required("admin"))
+    current_user=Depends(require_role(["admin"]))
 ):
-
     return {
         "message": "Welcome Admin"
     }
@@ -19,10 +45,8 @@ def admin_dashboard(
 
 @router.get("/recruiter/dashboard")
 def recruiter_dashboard(
-    current_user = Depends(get_current_user),
-    allowed = Depends(role_required("recruiter"))
+    current_user=Depends(require_role(["recruiter"]))
 ):
-
     return {
         "message": "Welcome Recruiter"
     }
@@ -30,10 +54,8 @@ def recruiter_dashboard(
 
 @router.get("/candidate/dashboard")
 def candidate_dashboard(
-    current_user = Depends(get_current_user),
-    allowed = Depends(role_required("candidate"))
+    current_user=Depends(require_role(["candidate"]))
 ):
-
     return {
         "message": "Welcome Candidate"
     }

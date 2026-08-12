@@ -1,0 +1,165 @@
+.
+├── .gitignore
+├── README.md
+├── backend
+│   ├── .env
+│   ├── alembic.ini
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── api
+│   │   │   └── v1
+│   │   │       ├── ai
+│   │   │       ├── auth
+│   │   │       ├── certificates
+│   │   │       ├── exams
+│   │   │       ├── leaderboard
+│   │   │       ├── recruiter
+│   │   │       ├── roadmaps
+│   │   │       ├── skills
+│   │   │       └── users
+│   │   ├── core
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py
+│   │   │   ├── constants.py
+│   │   │   ├── database.py
+│   │   │   ├── exceptions.py
+│   │   │   └── security.py
+│   │   ├── db
+│   │   │   ├── base.py
+│   │   │   ├── migrations
+│   │   │   ├── mixins.py
+│   │   │   └── session.py
+│   │   ├── dependencies
+│   │   │   ├── auth.py
+│   │   │   ├── auth_dependency.py
+│   │   │   ├── current_user.py
+│   │   │   ├── permissions.py
+│   │   │   ├── role_checker.py
+│   │   │   ├── role_guard.py
+│   │   │   └── roles.py
+│   │   ├── main.py
+│   │   ├── middleware
+│   │   │   ├── auth_middleware.py
+│   │   │   ├── logging_middleware.py
+│   │   │   └── rate_limit_middleware.py
+│   │   ├── models
+│   │   │   ├── __init__.py
+│   │   │   ├── ai_feedback.py
+│   │   │   ├── exam.py
+│   │   │   ├── leaderboard.py
+│   │   │   ├── permission.py
+│   │   │   ├── roadmap.py
+│   │   │   ├── role.py
+│   │   │   ├── role_permission.py
+│   │   │   ├── skill.py
+│   │   │   ├── skill_category.py
+│   │   │   ├── user.py
+│   │   │   └── user_skill.py
+│   │   ├── repositories
+│   │   │   ├── exam_repository.py
+│   │   │   ├── skill_repository.py
+│   │   │   └── user_repository.py
+│   │   ├── routers
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_router.py
+│   │   │   ├── home_router.py
+│   │   │   ├── role_router.py
+│   │   │   └── skill_router.py
+│   │   ├── schemas
+│   │   │   ├── __init__.py
+│   │   │   ├── ai
+│   │   │   ├── auth
+│   │   │   │   ├── login_schema.py
+│   │   │   │   ├── register_schema.py
+│   │   │   │   └── token_schema.py
+│   │   │   ├── exam
+│   │   │   ├── roadmap
+│   │   │   ├── skill
+│   │   │   │   ├── skill_category_schema.py
+│   │   │   │   ├── skill_schema.py
+│   │   │   │   └── user_skill_schema.py
+│   │   │   ├── user
+│   │   │   └── user_schema.py
+│   │   ├── services
+│   │   │   ├── __init__.py
+│   │   │   ├── ai
+│   │   │   ├── auth
+│   │   │   │   └── auth_service.py
+│   │   │   ├── exam
+│   │   │   ├── leaderboard
+│   │   │   ├── recommendation
+│   │   │   ├── roadmap
+│   │   │   ├── skill
+│   │   │   │   └── skill_service.py
+│   │   │   └── token_service.py
+│   │   └── utils
+│   │       ├── __init__.py
+│   │       ├── formatters.py
+│   │       ├── helpers.py
+│   │       ├── security.py
+│   │       └── validators.py
+│   ├── project-structure.txt
+│   ├── requirements.txt
+│   ├── test_db.py
+│   └── tests
+├── frontend
+│   ├── .gitignore
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   ├── README.md
+│   ├── app
+│   │   ├── dashboard
+│   │   │   ├── admin
+│   │   │   │   └── page.tsx
+│   │   │   ├── candidate
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   └── recruiter
+│   │   │       └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── page.tsx
+│   │   ├── roles
+│   │   │   └── page.tsx
+│   │   └── signup
+│   │       └── page.tsx
+│   ├── components
+│   │   ├── CompanyCard.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Hero.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── RoleCard.tsx
+│   │   └── dashboard
+│   │       ├── DashboardCard.tsx
+│   │       ├── Sidebar.tsx
+│   │       └── Topbar.tsx
+│   ├── eslint.config.mjs
+│   ├── lib
+│   │   ├── api.ts
+│   │   └── constants.ts
+│   ├── middleware.ts
+│   ├── next-env.d.ts
+│   ├── next.config.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.mjs
+│   ├── public
+│   │   ├── file.svg
+│   │   ├── globe.svg
+│   │   ├── next.svg
+│   │   ├── vercel.svg
+│   │   └── window.svg
+│   ├── services
+│   │   ├── api.ts
+│   │   ├── auth.ts
+│   │   └── roles.ts
+│   ├── tsconfig.json
+│   └── types
+│       ├── role.ts
+│       └── user.ts
+└── project-structure.txt
+
+54 directories, 109 files

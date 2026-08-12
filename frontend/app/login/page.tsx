@@ -1,497 +1,207 @@
-// "use client";
-
-// import { useState } from "react";
-// import Link from "next/link";
-
-// export default function LoginPage() {
-
-//   const [email, setEmail] =
-//     useState("");
-
-//   const [password, setPassword] =
-//     useState("");
-
-//   const [loading, setLoading] =
-//     useState(false);
-
-//   const [error, setError] =
-//     useState("");
-
-//   // LOGIN
-//   const handleLogin = async (
-//     e: React.FormEvent
-//   ) => {
-
-//     e.preventDefault();
-
-//     setError("");
-
-//     try {
-
-//       setLoading(true);
-
-//       // FORM DATA
-//       const formData =
-//         new URLSearchParams();
-
-//       formData.append(
-//         "username",
-//         email
-//       );
-
-//       formData.append(
-//         "password",
-//         password
-//       );
-
-//       // API REQUEST
-//       const response = await fetch(
-//         // "http://127.0.0.1:8000/login",
-//         "http://localhost:8000/login",
-//         {
-//           method: "POST",
-
-//           credentials: "include",
-
-//           headers: {
-//             "Content-Type":
-//               "application/x-www-form-urlencoded",
-//           },
-
-//           body: formData.toString(),
-//         }
-//       );
-
-//       const data =
-//         await response.json();
-
-//       console.log(
-//         "LOGIN RESPONSE:",
-//         data
-//       );
-
-//       // ERROR
-//       if (!response.ok) {
-
-//         setError(
-//           data.detail ||
-//           "Login failed"
-//         );
-
-//         return;
-
-//       }
-
-//       // SAVE USER
-//       localStorage.setItem(
-//         "user",
-//         JSON.stringify(data.user)
-//       );
-
-//       // OLD USER
-//       localStorage.setItem(
-//         "isNewUser",
-//         "false"
-//       );
-
-//       // REDIRECT
-//       if (
-//         data.user.role === "admin"
-//       ) {
-
-//         window.location.href =
-//           "/dashboard/admin";
-
-//       } else if (
-//         data.user.role === "recruiter"
-//       ) {
-
-//         window.location.href =
-//           "/dashboard/recruiter";
-
-//       } else {
-
-//         window.location.href =
-//           "/dashboard/candidate";
-
-//       }
-
-//     } catch (error) {
-
-//       console.log(
-//         "LOGIN ERROR:",
-//         error
-//       );
-
-//       setError(
-//         "Server connection error"
-//       );
-
-//     } finally {
-
-//       setLoading(false);
-
-//     }
-
-//   };
-
-//   return (
-
-//     <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 overflow-hidden relative">
-
-//       {/* BACKGROUND */}
-//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[160px] rounded-full" />
-
-//       {/* CARD */}
-//       <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
-
-//         <h1 className="text-5xl font-black text-center">
-//           Welcome Back
-//         </h1>
-
-//         <p className="mt-4 text-center text-gray-400">
-//           Continue your AI-powered career journey.
-//         </p>
-
-//         {/* ERROR */}
-//         {error && (
-
-//           <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
-
-//             {error}
-
-//           </div>
-
-//         )}
-
-//         {/* FORM */}
-//         <form
-//           onSubmit={handleLogin}
-//           className="mt-8 space-y-6"
-//         >
-
-//           {/* EMAIL */}
-//           <div>
-
-//             <label className="text-gray-400">
-//               Email
-//             </label>
-
-//             <input
-//               type="email"
-//               placeholder="Enter email"
-//               value={email}
-//               onChange={(e) =>
-//                 setEmail(
-//                   e.target.value
-//                 )
-//               }
-//               required
-//               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
-//             />
-
-//           </div>
-
-//           {/* PASSWORD */}
-//           <div>
-
-//             <label className="text-gray-400">
-//               Password
-//             </label>
-
-//             <input
-//               type="password"
-//               placeholder="Enter password"
-//               value={password}
-//               onChange={(e) =>
-//                 setPassword(
-//                   e.target.value
-//                 )
-//               }
-//               required
-//               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
-//             />
-
-//           </div>
-
-//           {/* BUTTON */}
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
-//           >
-
-//             {loading
-//               ? "Logging in..."
-//               : "Login"}
-
-//           </button>
-
-//         </form>
-
-//         {/* SIGNUP */}
-//         <p className="mt-8 text-center text-gray-500">
-
-//           Don’t have an account?{" "}
-
-//           <Link
-//             href="/signup"
-//             className="text-purple-400 hover:text-purple-300"
-//           >
-//             Signup
-//           </Link>
-
-//         </p>
-
-//       </div>
-
-//     </main>
-
-//   );
-
-// }
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-
-import API from "@/lib/api";
+import { loginUser, getCurrentUser } from "@/services/auth";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [email, setEmail] =
-    useState("");
+  const getDashboardPath = (user: any) => {
+    const cleanRole = (user.role?.name || user.role || "candidate").toLowerCase();
+    if (cleanRole === "admin") return "/dashboard/admin";
+    if (cleanRole === "recruiter") return "/dashboard/recruiter";
+    return "/dashboard/candidate";
+  };
 
-  const [password, setPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  // LOGIN
-  const handleLogin = async (
-    e: React.FormEvent
-  ) => {
-
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (loading) return;
     setError("");
 
-    try {
-
-      setLoading(true);
-
-      // FORM DATA
-      const formData =
-        new URLSearchParams();
-
-      formData.append(
-        "username",
-        email
-      );
-
-      formData.append(
-        "password",
-        password
-      );
-
-      // API REQUEST
-      const response =
-        await API.post(
-          "/login",
-          formData,
-          {
-            headers: {
-              "Content-Type":
-                "application/x-www-form-urlencoded",
-            },
-          }
-        );
-
-      const data =
-        response.data;
-
-      console.log(
-        "LOGIN RESPONSE:",
-        data
-      );
-
-      // SAVE USER
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
-      // OLD USER
-      localStorage.setItem(
-        "isNewUser",
-        "false"
-      );
-
-      // REDIRECT
-      if (
-        data.user.role ===
-        "admin"
-      ) {
-
-        window.location.href =
-          "/dashboard/admin";
-
-      }
-
-      else if (
-        data.user.role ===
-        "recruiter"
-      ) {
-
-        window.location.href =
-          "/dashboard/recruiter";
-
-      }
-
-      else {
-
-        window.location.href =
-          "/dashboard/candidate";
-
-      }
-
-    } catch (error: any) {
-
-      console.log(
-        "LOGIN ERROR:",
-        error
-      );
-
-      setError(
-        error?.response?.data?.detail ||
-        "Server connection error"
-      );
-
-    } finally {
-
-      setLoading(false);
-
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail.includes("@")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setError("Please enter your password.");
+      return;
     }
 
+    setLoading(true);
+
+    try {
+      const loginResponse = await loginUser({
+        email: cleanEmail,
+        password,
+      });
+
+      localStorage.setItem("token", loginResponse.access_token);
+      localStorage.setItem("access_token", loginResponse.access_token);
+
+      const currentUser = await getCurrentUser();
+      localStorage.setItem("user", JSON.stringify(currentUser));
+
+      window.location.replace(getDashboardPath(currentUser));
+    } catch (err: any) {
+      console.error("Login failed:", err.response?.data || err);
+      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") {
+        setError(detail);
+      } else {
+        setError("Invalid email or password");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 overflow-hidden relative">
-
-      {/* BACKGROUND */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-500/20 blur-[160px] rounded-full" />
-
-      {/* CARD */}
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-10">
-
-        <h1 className="text-5xl font-black text-center">
-          Welcome Back
-        </h1>
-
-        <p className="mt-4 text-center text-gray-400">
-          Continue your AI-powered career journey.
-        </p>
-
-        {/* ERROR */}
-        {error && (
-
-          <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400 text-sm">
-
-            {error}
-
-          </div>
-
-        )}
-
-        {/* FORM */}
-        <form
-          onSubmit={handleLogin}
-          className="mt-8 space-y-6"
-        >
-
-          {/* EMAIL */}
-          <div>
-
-            <label className="text-gray-400">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) =>
-                setEmail(
-                  e.target.value
-                )
-              }
-              required
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
-            />
-
-          </div>
-
-          {/* PASSWORD */}
-          <div>
-
-            <label className="text-gray-400">
-              Password
-            </label>
-
-            <input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) =>
-                setPassword(
-                  e.target.value
-                )
-              }
-              required
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-5 py-4 outline-none focus:border-purple-500"
-            />
-
-          </div>
-
-          {/* BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-white py-4 text-black font-bold transition hover:scale-[1.02] disabled:opacity-50"
-          >
-
-            {loading
-              ? "Logging in..."
-              : "Login"}
-
-          </button>
-
-        </form>
-
-        {/* SIGNUP */}
-        <p className="mt-8 text-center text-gray-500">
-
-          Don’t have an account?{" "}
-
-          <Link
-            href="/signup"
-            className="text-purple-400 hover:text-purple-300"
-          >
-            Signup
-          </Link>
-
-        </p>
-
+    <main style={{
+      minHeight: "100vh",
+      background: "var(--nex-bg)",
+      color: "var(--nex-text-1)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 24px",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Ambient background glow */}
+      <div className="hero-bg">
+        <div className="hero-orb" style={{
+          width: "500px", height: "500px",
+          background: "radial-gradient(circle, rgba(99,102,241,0.25), transparent)",
+          top: "20%", right: "20%",
+        }} />
+        <div className="hero-orb" style={{
+          width: "400px", height: "400px",
+          background: "radial-gradient(circle, rgba(6,182,212,0.2), transparent)",
+          bottom: "10%", left: "15%",
+        }} />
       </div>
 
+      <div style={{
+        position: "relative", zIndex: 1,
+        maxWidth: "460px", width: "100%",
+      }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <Link href="/" style={{ textDecoration: "none", color: "inherit", display: "inline-flex", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: "12px",
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "22px", fontWeight: "bold", color: "white"
+            }}>N</div>
+            <span style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "-0.02em" }}>Nexvora</span>
+          </Link>
+        </div>
+
+        {/* Card */}
+        <div className="glass glow-primary" style={{ padding: "36px", borderRadius: "24px" }}>
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <h1 style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "-0.02em", marginBottom: "6px" }}>
+              Welcome back
+            </h1>
+            <p style={{ color: "var(--nex-text-2)", fontSize: "14px" }}>
+              Log in to access your AI dashboard & problems
+            </p>
+          </div>
+
+          {error && (
+            <div style={{
+              padding: "12px 16px", borderRadius: "10px", marginBottom: "20px",
+              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+              color: "#fca5a5", fontSize: "13px", display: "flex", gap: "10px", alignItems: "center",
+            }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--nex-text-2)", marginBottom: "6px" }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="nex-input"
+                placeholder="you@example.com"
+                required
+                style={{ padding: "12px 16px", fontSize: "14px", background: "rgba(15,17,26,0.8)" }}
+              />
+            </div>
+
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--nex-text-2)" }}>
+                  Password
+                </label>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="nex-input"
+                placeholder="••••••••"
+                required
+                style={{ padding: "12px 16px", fontSize: "14px", background: "rgba(15,17,26,0.8)" }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary"
+              style={{ width: "100%", padding: "14px", fontSize: "15px", justifyContent: "center", borderRadius: "12px", marginTop: "6px" }}
+            >
+              {loading ? (
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="animate-spin">⟳</span> Logging in...
+                </span>
+              ) : "Log In →"}
+            </button>
+          </form>
+
+          {/* Quick Demo Login Helper */}
+          <div style={{
+            marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--nex-border)",
+            fontSize: "12px", color: "var(--nex-text-3)", textAlign: "center"
+          }}>
+            <p style={{ marginBottom: "8px", fontWeight: "600" }}>Demo Credentials:</p>
+            <button
+              onClick={() => { setEmail("laptop18122022@gmail.com"); setPassword("Admin@123"); }}
+              style={{
+                background: "var(--nex-surface)", border: "1px solid var(--nex-border)",
+                borderRadius: "6px", padding: "4px 10px", fontSize: "12px", color: "#a5b4fc",
+                cursor: "pointer"
+              }}
+            >
+              Use Admin Account
+            </button>
+          </div>
+
+          <p style={{ marginTop: "24px", textAlign: "center", fontSize: "14px", color: "var(--nex-text-3)" }}>
+            Don't have an account?{" "}
+            <Link href="/signup" style={{ color: "var(--nex-primary)", fontWeight: "600", textDecoration: "none" }}>
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </div>
     </main>
-
   );
-
 }

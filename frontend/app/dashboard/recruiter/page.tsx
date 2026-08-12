@@ -1,304 +1,50 @@
-// "use client";
-
-// import { useRouter } from "next/navigation";
-
-// export default function RecruiterDashboard() {
-
-//   const router = useRouter();
-
-  
-
-//   return (
-
-//     <main className="min-h-screen bg-black text-white p-10 relative overflow-hidden">
-
-//       {/* BACKGROUND */}
-//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-blue-500/20 blur-[150px] rounded-full" />
-
-//       {/* CONTENT */}
-//       <div className="relative z-10">
-
-//         <h1 className="text-7xl font-black">
-//           Recruiter Dashboard
-//         </h1>
-
-//         <p className="mt-4 text-gray-400 text-xl">
-//           Manage hiring and candidates efficiently.
-//         </p>
-
-//         {/* CARDS */}
-//         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-//             <h2 className="text-3xl font-bold">
-//               Post Jobs
-//             </h2>
-//             <p className="mt-3 text-gray-400">
-//               Create and publish new openings.
-//             </p>
-//           </div>
-
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-//             <h2 className="text-3xl font-bold">
-//               Applicants
-//             </h2>
-//             <p className="mt-3 text-gray-400">
-//               View and manage candidates.
-//             </p>
-//           </div>
-
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-//             <h2 className="text-3xl font-bold">
-//               Schedule Interviews
-//             </h2>
-//             <p className="mt-3 text-gray-400">
-//               Organize interview rounds.
-//             </p>
-//           </div>
-
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-//             <h2 className="text-3xl font-bold">
-//               Candidate Search
-//             </h2>
-//             <p className="mt-3 text-gray-400">
-//               Find skilled professionals.
-//             </p>
-//           </div>
-
-//           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-//             <h2 className="text-3xl font-bold">
-//               Hiring Analytics
-//             </h2>
-//             <p className="mt-3 text-gray-400">
-//               Track recruitment performance.
-//             </p>
-//           </div>
-
-//         </div>
-
-//       </div>
-
-//     </main>
-//   );
-// }
-
-
 "use client";
 
-import { useEffect, useState } from "react";
+import Sidebar from "@/components/dashboard/Sidebar";
 
-export default function RecruiterDashboard() {
-
-  const [user, setUser] =
-    useState<any>(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  // VALIDATE USER
-  useEffect(() => {
-
-    try {
-
-      const storedUser =
-        localStorage.getItem(
-          "user"
-        );
-
-      // NO USER
-      if (!storedUser) {
-
-        window.location.href =
-          "/login";
-
-        return;
-
-      }
-
-      const parsedUser =
-        JSON.parse(storedUser);
-
-      // ROLE PROTECTION
-      if (
-        parsedUser.role !==
-        "recruiter"
-      ) {
-
-        window.location.href =
-          `/dashboard/${parsedUser.role}`;
-
-        return;
-
-      }
-
-      setUser(parsedUser);
-
-    } catch (error) {
-
-      console.log(
-        "Recruiter Dashboard Error:",
-        error
-      );
-
-      localStorage.clear();
-
-      window.location.href =
-        "/login";
-
-      return;
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }, []);
-
-  // LOADING
-  if (loading) {
-
-    return (
-
-      <main className="min-h-screen bg-black text-white flex items-center justify-center text-xl">
-
-        Loading Recruiter Dashboard...
-
-      </main>
-
-    );
-
-  }
-
+export default function RecruiterDashboardPage() {
   return (
-
-    <main className="min-h-screen bg-black text-white p-10 relative overflow-hidden">
-
-      {/* BACKGROUND */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-blue-500/20 blur-[150px] rounded-full" />
-
-      {/* CONTENT */}
-      <div className="relative z-10">
-
-        <h1 className="text-7xl font-black">
-
-          Recruiter Dashboard
-
-        </h1>
-
-        <p className="mt-4 text-gray-400 text-xl">
-
-          Welcome back{" "}
-
-          <span className="text-blue-400 font-bold">
-
-            {user?.name}
-
-          </span>
-
-          👋
-
-        </p>
-
-        <p className="mt-2 text-gray-500">
-
-          Manage hiring and candidates efficiently.
-
-        </p>
-
-        {/* CARDS */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-          {/* CARD */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-
-            <h2 className="text-3xl font-bold">
-
-              Post Jobs
-
-            </h2>
-
-            <p className="mt-3 text-gray-400">
-
-              Create and publish new openings.
-
-            </p>
-
+    <div className="layout-sidebar">
+      <Sidebar />
+      <div className="main-content">
+        <div className="topbar">
+          <h1 style={{ fontSize: "16px", fontWeight: "700" }}>Recruiter Workspace</h1>
+          <div style={{ marginLeft: "auto" }}>
+            <span className="badge badge-primary">Hiring Portal</span>
           </div>
-
-          {/* CARD */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-
-            <h2 className="text-3xl font-bold">
-
-              Applicants
-
-            </h2>
-
-            <p className="mt-3 text-gray-400">
-
-              View and manage candidates.
-
-            </p>
-
-          </div>
-
-          {/* CARD */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-
-            <h2 className="text-3xl font-bold">
-
-              Schedule Interviews
-
-            </h2>
-
-            <p className="mt-3 text-gray-400">
-
-              Organize interview rounds.
-
-            </p>
-
-          </div>
-
-          {/* CARD */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-
-            <h2 className="text-3xl font-bold">
-
-              Candidate Search
-
-            </h2>
-
-            <p className="mt-3 text-gray-400">
-
-              Find skilled professionals.
-
-            </p>
-
-          </div>
-
-          {/* CARD */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-
-            <h2 className="text-3xl font-bold">
-
-              Hiring Analytics
-
-            </h2>
-
-            <p className="mt-3 text-gray-400">
-
-              Track recruitment performance.
-
-            </p>
-
-          </div>
-
         </div>
 
+        <div style={{ padding: "24px" }}>
+          <div className="glass glow-primary" style={{ padding: "24px", borderRadius: "16px", marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "-0.02em", marginBottom: "4px" }}>
+              Recruiter & Candidate Assessment Console
+            </h2>
+            <p style={{ color: "var(--nex-text-2)", fontSize: "14px" }}>
+              Filter top-performing SDE candidates, view coding contest rankings, and inspect AI interview evaluations.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
+            {[
+              { label: "Active Job Listings", val: "6", icon: "💼", color: "#6366f1" },
+              { label: "Verified Candidates", val: "24", icon: "👤", color: "#10b981" },
+              { label: "Pending Assessments", val: "9", icon: "📝", color: "#f59e0b" },
+            ].map((s) => (
+              <div key={s.label} className="stat-card" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: "12px", flexShrink: 0,
+                  background: `${s.color}15`, border: `1px solid ${s.color}30`,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px",
+                }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontSize: "26px", fontWeight: "900", color: s.color, lineHeight: 1 }}>{s.val}</div>
+                  <div style={{ fontSize: "12px", color: "var(--nex-text-3)", marginTop: "4px" }}>{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-
-    </main>
+    </div>
   );
-
 }

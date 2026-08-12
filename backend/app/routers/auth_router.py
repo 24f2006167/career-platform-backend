@@ -1,543 +1,279 @@
+# from app.dependencies.role_guard import (
+#     require_role
+# )
+
 # from fastapi import (
-#     APIRouter, 
+#     APIRouter,
 #     Depends,
 #     HTTPException,
-#     Response
+#     status
 # )
-# from sqlalchemy.orm import Session
-# from app.dependencies.auth_dependency import (
-#     get_current_user,
-#     require_role 
-#     )
-# from fastapi.security import OAuth2PasswordRequestForm
-# from app.core.database import get_db
+
+# from app.dependencies.current_user import (
+#     get_current_user
+# )
+
 # from app.models.user import User
-# from app.schemas.user_schema import UserCreate
-# from app.utils.security import (
-#     hash_password,
-#     verify_password
+# from sqlalchemy.orm import Session
+
+# from app.core.database import get_db
+
+# from app.schemas.auth.register_schema import (
+#     RegisterSchema
 # )
-# from app.services.token_service import (
-#     create_access_token,
-#     create_refresh_token
+
+# from app.schemas.auth.login_schema import (
+#     LoginSchema
 # )
-# router = APIRouter()
+
+# from app.schemas.auth.token_schema import (
+#     TokenSchema
+# )
+
+# from app.services.auth.auth_service import (
+#     register_user,
+#     login_user
+# )
 
 
-# @router.post("/signup")
-# def signup(user: UserCreate, db: Session = Depends(get_db)):
+# router = APIRouter(
+#     prefix="/auth",
+#     tags=["Authentication"]
+# )
 
-#     if user.role == "admin":
 
-#         raise HTTPException(
-#             status_code=403,
-#             detail="Admin account cannot be created publicly"
-#         )
-
-#     # CHECK IF EMAIL ALREADY EXISTS
-#     existing_user = (
-#         db.query(User)
-#         .filter(User.email == user.email)
-#         .first()
-#     )
-
-#     if existing_user:
-
-#         raise HTTPException(
-#             status_code=400,
-#             detail="Email already registered"
-#         )
-
-#     # CREATE USER
-#     new_user = User(
-#         name=user.name,
-#         email=user.email,
-#         password=hash_password(user.password),
-#         role=user.role
-#     )
-
-#     db.add(new_user)
-
-#     # SAVE TO DATABASE
-#     db.commit()
-
-#     db.refresh(new_user)
-
-#     # CREATE TOKEN
-#     access_token = create_access_token(
-#         data={
-#             "sub": new_user.email
-#         }
-#     )
-
-#     # RETURN RESPONSE
-#     return {
-#         "message": "Signup successful",
-#         "access_token": access_token,
-#         "user": {
-#             "id": new_user.id,
-#             "name": new_user.name,
-#             "email": new_user.email,
-#             "role": new_user.role
-#         }
-#     }
-
-# @router.post("/login")
-# def login(
-#     response: Response,
-#     form_data: OAuth2PasswordRequestForm = Depends(),
+# # REGISTER
+# @router.post(
+#     "/register",
+#     status_code=status.HTTP_201_CREATED
+# )
+# def register(
+#     user_data: RegisterSchema,
 #     db: Session = Depends(get_db)
 # ):
 
-#     existing_user = db.query(User).filter(
-#         User.email == form_data.username
-#     ).first()
+#     try:
 
-#     # INVALID EMAIL
-#     if not existing_user:
-
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Invalid email"
+#         new_user = register_user(
+#             db,
+#             user_data
 #         )
 
-#     # VERIFY PASSWORD
-#     valid_password = verify_password(
-#         form_data.password,
-#         existing_user.password
-#     )
-
-#     if not valid_password:
-
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Invalid password"
+#         role_name = (
+#             new_user.role.name
+#             if new_user.role
+#             else "candidate"
 #         )
 
-#     # CREATE ACCESS TOKEN
-#     access_token = create_access_token({
-#         "sub": existing_user.email,
-#         "role": existing_user.role
-#     })
-
-#     # CREATE REFRESH TOKEN
-#     refresh_token = create_refresh_token({
-#         "sub": existing_user.email
-#     })
-
-#     # SET ACCESS COOKIE
-#     response.set_cookie(
-#         key="access_token",
-#         value=access_token,
-#         httponly=True,
-#         secure=False,
-#         samesite="lax",
-#         max_age=60 * 15
-#     )
-
-#     # SET REFRESH COOKIE
-#     response.set_cookie(
-#         key="refresh_token",
-#         value=refresh_token,
-#         httponly=True,
-#         secure=False,
-#         samesite="lax",
-#         max_age=60 * 60 * 24 * 7
-#     )
-
-#     return {
-#         "message": "Login successful",
-#         "user": {
-#             "id": existing_user.id,
-#             "name": existing_user.name,
-#             "email": existing_user.email,
-#             "role": existing_user.role
+#         return {
+#             "message": "User registered successfully",
+#             "user_id": str(new_user.id),
+#             "role": role_name
 #         }
-#     }
 
-# @router.post("/logout")
-# def logout(response: Response):
+#     except Exception as e:
 
-#     # REMOVE ACCESS TOKEN
-#     response.delete_cookie(
-#         key="access_token"
-#     )
+#         raise HTTPException(
+#             status_code=400,
+#             detail=str(e)
+#         )
 
-#     # REMOVE REFRESH TOKEN
-#     response.delete_cookie(
-#         key="refresh_token"
+
+# # LOGIN
+# @router.post(
+#     "/login",
+#     response_model=TokenSchema
+# )
+# def login(
+#     login_data: LoginSchema,
+#     db: Session = Depends(get_db)
+# ):
+
+#     try:
+
+#         token = login_user(
+#             db,
+#             login_data
+#         )
+
+#         return token
+
+#     except Exception as e:
+
+#         raise HTTPException(
+#             status_code=401,
+#             detail=str(e)
+#         )
+
+
+# # CURRENT USER PROFILE
+# @router.get("/me")
+# def get_me(
+#     current_user: User = Depends(get_current_user)
+# ):
+
+#     role_name = (
+#         current_user.role.name
+#         if current_user.role
+#         else "candidate"
 #     )
 
 #     return {
-#         "message": "Logged out successfully"
+#         "id": str(current_user.id),
+#         "full_name": current_user.full_name,
+#         "username": current_user.username,
+#         "email": current_user.email,
+#         "role_id": str(current_user.role_id),
+#         "role": role_name,
+#         "xp": current_user.xp,
+#         "level": current_user.level,
+#         "streak": current_user.streak
 #     }
 
-# @router.get("/profile")
-# def profile(current_user = Depends(get_current_user)):
 
-#     return {
-#         "id": current_user.id,
-#         "name": current_user.name,
-#         "email": current_user.email
-#     }
-
-# @router.get("/admin/dashboard")
-# def admin_dashboard(
-#     current_user = Depends(
-#         require_role("admin")
+# # ADMIN ONLY ROUTE
+# @router.get("/admin-only")
+# def admin_only_route(
+#     current_user: User = Depends(
+#         require_role(["admin"])
 #     )
 # ):
 
 #     return {
 #         "message": "Welcome Admin",
-#         "user": current_user.name
-#     }
-
-
-# # CURRENT LOGGED-IN USER
-# @router.get("/me")
-# def get_me(
-#     current_user = Depends(
-#         get_current_user
-#     )
-# ):
-
-#     return {
-#         "id": current_user.id,
-#         "name": current_user.name,
-#         "email": current_user.email,
-#         "role": current_user.role
-#     }
-
-
-# @router.get("/recruiter/dashboard")
-# def recruiter_dashboard(
-#     current_user = Depends(
-#         require_role("recruiter")
-#     )
-# ):
-
-#     return {
-#         "message": "Welcome Recruiter",
-#         "user": current_user.name
-#     }
-
-# @router.get("/candidate/dashboard")
-# def candidate_dashboard(
-#     current_user = Depends(
-#         require_role("candidate")
-#     )
-# ):
-
-#     return {
-#         "message": "Welcome Candidate",
-#         "user": current_user.name
+#         "user": current_user.email
 #     }
 
 
 
+
+from app.dependencies.role_guard import require_role
 
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Response
+    status
 )
 
+from app.dependencies.current_user import get_current_user
+from app.models.user import User
 from sqlalchemy.orm import Session
-
-from fastapi.security import (
-    OAuth2PasswordRequestForm
-)
-
-from app.dependencies.auth_dependency import (
-    get_current_user,
-    require_role
-)
-
 from app.core.database import get_db
 
-from app.models.user import User
+from app.schemas.auth.register_schema import RegisterSchema
+from app.schemas.auth.login_schema import LoginSchema
+from app.schemas.auth.token_schema import TokenSchema
 
-from app.schemas.user_schema import UserCreate
-
-from app.utils.security import (
-    hash_password,
-    verify_password
+from app.services.auth.auth_service import (
+    register_user,
+    login_user
 )
 
-from app.services.token_service import (
-    create_access_token,
-    create_refresh_token
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"]
 )
 
-router = APIRouter()
 
-
-# SIGNUP
-@router.post("/signup")
-def signup(
-    user: UserCreate,
-    response: Response,
+# REGISTER
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED
+)
+def register(
+    user_data: RegisterSchema,
     db: Session = Depends(get_db)
 ):
-
-    # BLOCK ADMIN SIGNUP
-    if user.role == "admin":
-
-        raise HTTPException(
-            status_code=403,
-            detail="Admin account cannot be created publicly"
+    try:
+        new_user = register_user(
+            db,
+            user_data
         )
 
-    # CHECK EMAIL
-    existing_user = (
-        db.query(User)
-        .filter(User.email == user.email)
-        .first()
-    )
+        role_name = (
+            new_user.role.name
+            if new_user.role
+            else "candidate"
+        )
 
-    if existing_user:
+        return {
+            "message": "User registered successfully",
+            "user_id": str(new_user.id),
+            "role": role_name
+        }
 
+    except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail="Email already registered"
+            detail=str(e)
         )
-
-    # CREATE USER
-    new_user = User(
-        name=user.name,
-        email=user.email,
-        password=hash_password(
-            user.password
-        ),
-        role=user.role
-    )
-
-    db.add(new_user)
-
-    db.commit()
-
-    db.refresh(new_user)
-
-    # ACCESS TOKEN
-    access_token = create_access_token(
-        data={
-            "sub": new_user.email,
-            "role": new_user.role
-        }
-    )
-
-    # REFRESH TOKEN
-    refresh_token = create_refresh_token(
-        data={
-            "sub": new_user.email
-        }
-    )
-
-    # ACCESS COOKIE
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 15
-    )
-
-    # REFRESH COOKIE
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 60 * 24 * 7
-    )
-
-    return {
-        "message": "Signup successful",
-        "user": {
-            "id": new_user.id,
-            "name": new_user.name,
-            "email": new_user.email,
-            "role": new_user.role
-        }
-    }
 
 
 # LOGIN
-@router.post("/login")
+@router.post(
+    "/login",
+    response_model=TokenSchema
+)
 def login(
-    response: Response,
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_data: LoginSchema,
     db: Session = Depends(get_db)
 ):
-
-    # FIND USER
-    existing_user = (
-        db.query(User)
-        .filter(
-            User.email == form_data.username
+    try:
+        token = login_user(
+            db,
+            login_data
         )
-        .first()
-    )
 
-    # INVALID EMAIL
-    if not existing_user:
+        return token
 
+    except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail="Invalid email"
+            detail=str(e)
         )
 
-    # VERIFY PASSWORD
-    valid_password = verify_password(
-        form_data.password,
-        existing_user.password
-    )
 
-    # INVALID PASSWORD
-    if not valid_password:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password"
-        )
-
-    # ACCESS TOKEN
-    access_token = create_access_token(
-        data={
-            "sub": existing_user.email,
-            "role": existing_user.role
-        }
-    )
-
-    # REFRESH TOKEN
-    refresh_token = create_refresh_token(
-        data={
-            "sub": existing_user.email
-        }
-    )
-
-    # ACCESS COOKIE
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 15
-    )
-
-    # REFRESH COOKIE
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 60 * 24 * 7
-    )
-
-    return {
-        "message": "Login successful",
-        "user": {
-            "id": existing_user.id,
-            "name": existing_user.name,
-            "email": existing_user.email,
-            "role": existing_user.role
-        }
-    }
-
-
-# LOGOUT
-@router.post("/logout")
-def logout(response: Response):
-
-    # DELETE ACCESS COOKIE
-    response.delete_cookie(
-        key="access_token"
-    )
-
-    # DELETE REFRESH COOKIE
-    response.delete_cookie(
-        key="refresh_token"
-    )
-
-    return {
-        "message": "Logged out successfully"
-    }
-
-
-# PROFILE
-@router.get("/profile")
-def profile(
-    current_user = Depends(
-        get_current_user
-    )
-):
-
-    return {
-        "id": current_user.id,
-        "name": current_user.name,
-        "email": current_user.email
-    }
-
-
-# CURRENT USER
+# CURRENT USER PROFILE
 @router.get("/me")
 def get_me(
-    current_user = Depends(
-        get_current_user
-    )
+    current_user: User = Depends(get_current_user)
 ):
+    role_name = (
+        current_user.role.name
+        if current_user.role
+        else "candidate"
+    )
 
     return {
-        "id": current_user.id,
-        "name": current_user.name,
+        "id": str(current_user.id),
+        "full_name": current_user.full_name,
+        "username": current_user.username,
         "email": current_user.email,
-        "role": current_user.role
+        "role": role_name,
+        "role_id": str(current_user.role_id),
+        "xp": current_user.xp,
+        "level": current_user.level,
+        "streak": current_user.streak,
+        "is_verified": current_user.is_verified,
+        "is_active": current_user.is_active,
+        "profile_image": current_user.profile_image,
+        "bio": current_user.bio,
+        "github_url": current_user.github_url,
+        "linkedin_url": current_user.linkedin_url,
+        "resume_url": current_user.resume_url
     }
 
 
-# ADMIN DASHBOARD
-@router.get("/admin/dashboard")
-def admin_dashboard(
-    current_user = Depends(
-        require_role("admin")
+# ADMIN ONLY ROUTE
+@router.get("/admin-only")
+def admin_only_route(
+    current_user: User = Depends(
+        require_role(["admin"])
     )
 ):
-
     return {
         "message": "Welcome Admin",
-        "user": current_user.name
-    }
-
-
-# RECRUITER DASHBOARD
-@router.get("/recruiter/dashboard")
-def recruiter_dashboard(
-    current_user = Depends(
-        require_role("recruiter")
-    )
-):
-
-    return {
-        "message": "Welcome Recruiter",
-        "user": current_user.name
-    }
-
-
-# CANDIDATE DASHBOARD
-@router.get("/candidate/dashboard")
-def candidate_dashboard(
-    current_user = Depends(
-        require_role("candidate")
-    )
-):
-
-    return {
-        "message": "Welcome Candidate",
-        "user": current_user.name
+        "user": current_user.email
     }
