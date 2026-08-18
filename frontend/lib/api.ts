@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" ? "" : "http://127.0.0.1:8001");
 
 export const apiUrl = (path: string) => {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
