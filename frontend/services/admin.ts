@@ -15,6 +15,11 @@ export interface AdminUser {
   username: string;
   email: string;
   role: string;
+  nexvora_rating?: number;
+  level?: number;
+  xp?: number;
+  target_role?: string;
+  is_active?: boolean;
 }
 
 export interface AdminSkill {

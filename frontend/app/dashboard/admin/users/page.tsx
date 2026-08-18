@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { AdminUser, getAdminUsers } from "@/services/admin";
 
@@ -9,11 +9,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -25,7 +21,14 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadUsers();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadUsers]);
 
   return (
     <div className="layout-sidebar">
@@ -107,17 +110,17 @@ export default function AdminUsersPage() {
                           {u.role || "Candidate"}
                         </span>
                       </td>
-                      <td style={{ fontWeight: "700", color: "#a5b4fc" }}>⭐ {(u as any).nexvora_rating ?? 1200}</td>
-                      <td style={{ fontSize: "13px", color: "var(--nex-text-2)" }}>Lvl {(u as any).level ?? 1} · {(u as any).xp ?? 0} XP</td>
-                      <td style={{ fontSize: "13px", color: "var(--nex-text-2)" }}>{(u as any).target_role || "Software Engineer"}</td>
+                      <td style={{ fontWeight: "700", color: "#a5b4fc" }}>⭐ {u.nexvora_rating ?? 1200}</td>
+                      <td style={{ fontSize: "13px", color: "var(--nex-text-2)" }}>Lvl {u.level ?? 1} · {u.xp ?? 0} XP</td>
+                      <td style={{ fontSize: "13px", color: "var(--nex-text-2)" }}>{u.target_role || "Software Engineer"}</td>
                       <td>
                         <span style={{
                           padding: "3px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: "700",
-                          background: (u as any).is_active !== false ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)",
-                          color: (u as any).is_active !== false ? "var(--nex-success)" : "var(--nex-danger)",
-                          border: `1px solid ${(u as any).is_active !== false ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`
+                          background: u.is_active !== false ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)",
+                          color: u.is_active !== false ? "var(--nex-success)" : "var(--nex-danger)",
+                          border: `1px solid ${u.is_active !== false ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`
                         }}>
-                          {(u as any).is_active !== false ? "Active" : "Disabled"}
+                          {u.is_active !== false ? "Active" : "Disabled"}
                         </span>
                       </td>
                     </tr>

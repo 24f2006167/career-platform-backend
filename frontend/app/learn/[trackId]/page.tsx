@@ -4,7 +4,28 @@ import { use, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 
-const COURSE_DATA: Record<string, any> = {
+interface Lesson {
+  id: string;
+  title: string;
+  duration: string;
+  completed: boolean;
+}
+
+interface Module {
+  title: string;
+  lessons: Lesson[];
+}
+
+interface Course {
+  title: string;
+  category: string;
+  level: string;
+  lessonsCount: number;
+  description: string;
+  modules: Module[];
+}
+
+const COURSE_DATA: Record<string, Course> = {
   "dsa-core": {
     title: "Data Structures & Algorithms Masterclass",
     category: "DSA",
@@ -128,13 +149,13 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ trackI
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "20px" }}>
             {/* Sidebar Modules List */}
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              {course.modules.map((mod: any, idx: number) => (
+              {course.modules.map((mod: Module, idx: number) => (
                 <div key={idx} className="glass" style={{ padding: "16px", borderRadius: "14px" }}>
                   <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--nex-text-2)", marginBottom: "10px" }}>
                     {mod.title}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {mod.lessons.map((les: any) => (
+                    {mod.lessons.map((les: Lesson) => (
                       <button
                         key={les.id}
                         onClick={() => setActiveLesson(les)}

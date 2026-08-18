@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import API from "@/lib/api";
 
@@ -14,7 +14,7 @@ type Question = {
   company_tag?: string;
   title: string;
   question: string;
-  given_data?: any;
+  given_data?: Record<string, unknown>;
 };
 
 type RoleOption = {
@@ -44,6 +44,11 @@ const ROLE_SKILLS: Record<string, string[]> = {
 };
 
 const DEFAULT_ROLE = "Frontend Developer";
+
+const INITIAL_ROLES: RoleOption[] = Object.keys(ROLE_SKILLS).map((roleName) => ({
+  role: roleName,
+  skills: ROLE_SKILLS[roleName],
+}));
 
 function InterviewRoomContent() {
   const searchParams = useSearchParams();
@@ -77,17 +82,9 @@ function InterviewRoomContent() {
     return apiRole?.skills?.length ? apiRole.skills : ROLE_SKILLS[DEFAULT_ROLE];
   }, [role, roles]);
 
-  useEffect(() => {
-    loadRoles();
-  }, []);
-
-  useEffect(() => {
-    if (selectedRoleSkills.length > 0 && !selectedRoleSkills.includes(skill)) {
-      setSkill(selectedRoleSkills[0]);
-    }
-  }, [selectedRoleSkills, skill]);
-
-  async function loadRoles() {
+  const loadRoles = useCallback(async () => {
+    const urlRole = searchParams.get("role");
+    const urlSkill = searchParams.get("skill");
     try {
       const res = await API.get("/interview/roles");
       const apiRoles: RoleOption[] = res.data.roles || [];
@@ -98,21 +95,15 @@ function InterviewRoomContent() {
       }));
 
       const mergedRoles: RoleOption[] = [
-        ...Object.keys(ROLE_SKILLS).map((roleName) => ({
-          role: roleName,
-          skills: ROLE_SKILLS[roleName],
-        })),
-        ...cleanedRoles.filter((r) => !ROLE_SKILLS[r.role]),
+        ...cleanedRoles,
+        ...INITIAL_ROLES.filter(
+          (init) => !cleanedRoles.some((cr) => cr.role === init.role)
+        ),
       ];
 
       setRoles(mergedRoles);
-
-      const urlRole = searchParams.get("role");
-      const urlSkill = searchParams.get("skill");
-
       const savedRole =
         urlRole ||
-        localStorage.getItem("selectedRole") ||
         localStorage.getItem("selectedCareerRole") ||
         localStorage.getItem("role") ||
         DEFAULT_ROLE;
@@ -129,8 +120,8 @@ function InterviewRoomContent() {
     } catch (err) {
       console.error("Role load error:", err);
 
-      const urlRole = searchParams.get("role") || DEFAULT_ROLE;
-      const finalRole = ROLE_SKILLS[urlRole] ? urlRole : DEFAULT_ROLE;
+      const urlRoleFallback = searchParams.get("role") || DEFAULT_ROLE;
+      const finalRole = ROLE_SKILLS[urlRoleFallback] ? urlRoleFallback : DEFAULT_ROLE;
       const skills = ROLE_SKILLS[finalRole];
 
       setRoles(
@@ -143,7 +134,23 @@ function InterviewRoomContent() {
       setRole(finalRole);
       setSkill(skills[0]);
     }
-  }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadRoles();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadRoles]);
+
+  useEffect(() => {
+    if (selectedRoleSkills.length > 0 && !selectedRoleSkills.includes(skill)) {
+      const timer = setTimeout(() => {
+        setSkill(selectedRoleSkills[0]);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedRoleSkills, skill]);
 
   function handleRoleChange(newRole: string) {
     setRole(newRole);
@@ -188,8 +195,9 @@ function InterviewRoomContent() {
       setQuestion(res.data.question);
       setCurrentNo(res.data.current_question_number || 1);
       setTotalNo(res.data.total_questions || totalQuestions);
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "Could not start interview.");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      alert(axiosErr.response?.data?.detail || "Could not start interview.");
     } finally {
       setLoading(false);
     }
@@ -233,8 +241,9 @@ function InterviewRoomContent() {
         setHint("");
         setCurrentNo(res.data.current_question_number);
       }
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "Submit failed.");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      alert(axiosErr.response?.data?.detail || "Submit failed.");
     } finally {
       setLoading(false);
     }

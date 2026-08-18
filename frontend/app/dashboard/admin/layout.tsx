@@ -17,13 +17,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           parsed.role === "admin" ||
           parsed.role?.name === "admin"
         ) {
-          setAuthorized(true);
-          return;
+          const timer = setTimeout(() => {
+            setAuthorized(true);
+          }, 0);
+          return () => clearTimeout(timer);
         }
       }
       // Non-admin user attempting to access admin route
       router.push("/dashboard/candidate");
-    } catch (e) {
+    } catch {
       router.push("/dashboard/candidate");
     }
   }, [router]);

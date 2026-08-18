@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 
@@ -13,9 +13,9 @@ interface Problem {
   company_tags: string[];
   acceptance_rate: number;
   total_submissions: number;
-  points: number;
-  is_premium: boolean;
-  is_solved: boolean;
+  points?: number;
+  is_premium?: boolean;
+  is_solved?: boolean;
 }
 
 const DIFFICULTY_TABS = [
@@ -47,20 +47,7 @@ export default function ProblemsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    fetchProblems();
-  }, [difficulty, topic, company, page]);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      fetchProblems();
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  async function fetchProblems() {
+  const fetchProblems = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("access_token");
@@ -83,23 +70,29 @@ export default function ProblemsPage() {
     } catch {
       // Demo fallback
       setProblems([
-        { id: "1", title: "Two Sum", slug: "two-sum", difficulty: "easy", topic_tags: ["Array", "Hash Table"], company_tags: ["Google", "Amazon"], acceptance_rate: 49.2, total_submissions: 12420, points: 10, is_premium: false, is_solved: true },
-        { id: "2", title: "Valid Parentheses", slug: "valid-parentheses", difficulty: "easy", topic_tags: ["String", "Stack"], company_tags: ["Amazon", "Meta"], acceptance_rate: 40.1, total_submissions: 8300, points: 10, is_premium: false, is_solved: false },
-        { id: "3", title: "Maximum Subarray", slug: "maximum-subarray", difficulty: "medium", topic_tags: ["Array", "Dynamic Programming"], company_tags: ["Amazon", "LinkedIn", "Apple"], acceptance_rate: 50.3, total_submissions: 7200, points: 20, is_premium: false, is_solved: false },
-        { id: "4", title: "Binary Search", slug: "binary-search", difficulty: "easy", topic_tags: ["Array", "Binary Search"], company_tags: ["Google", "Microsoft"], acceptance_rate: 55.1, total_submissions: 5800, points: 10, is_premium: false, is_solved: false },
-        { id: "5", title: "Reverse Linked List", slug: "reverse-linked-list", difficulty: "easy", topic_tags: ["Linked List"], company_tags: ["Apple", "Uber"], acceptance_rate: 73.6, total_submissions: 9100, points: 10, is_premium: false, is_solved: false },
+        { id: "1", title: "Two Sum", slug: "two-sum", difficulty: "easy", topic_tags: ["Array", "Hash Table"], company_tags: ["Google", "Amazon"], acceptance_rate: 49.2, total_submissions: 12420 },
+        { id: "2", title: "Valid Parentheses", slug: "valid-parentheses", difficulty: "easy", topic_tags: ["String", "Stack"], company_tags: ["Amazon", "Meta"], acceptance_rate: 40.1, total_submissions: 8300 },
+        { id: "3", title: "Maximum Subarray", slug: "maximum-subarray", difficulty: "medium", topic_tags: ["Array", "Dynamic Programming"], company_tags: ["Amazon", "LinkedIn", "Apple"], acceptance_rate: 50.3, total_submissions: 7200 },
+        { id: "4", title: "Binary Search", slug: "binary-search", difficulty: "easy", topic_tags: ["Array", "Binary Search"], company_tags: ["Google", "Microsoft"], acceptance_rate: 55.1, total_submissions: 5800 },
+        { id: "5", title: "Reverse Linked List", slug: "reverse-linked-list", difficulty: "easy", topic_tags: ["Linked List"], company_tags: ["Apple", "Uber"], acceptance_rate: 73.6, total_submissions: 9100 },
       ]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, difficulty, topic, company, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProblems();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchProblems]);
 
   const difficultyBadgeStyle: Record<string, { bg: string; border: string; color: string }> = {
     easy: { bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.3)", color: "var(--nex-success)" },
     medium: { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.3)", color: "var(--nex-warning)" },
     hard: { bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.3)", color: "var(--nex-danger)" },
   };
-
   const companyBadgeColors: Record<string, string> = {
     Google: "#ea4335",
     Amazon: "#ff9900",
@@ -272,14 +265,17 @@ export default function ProblemsPage() {
 
                     {/* Company Tags */}
                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                      {(p.company_tags || ["Google", "Amazon"]).slice(0, 3).map((comp) => (
-                        <span key={comp} style={{
-                          padding: "2px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: "700",
-                          background: "rgba(255,255,255,0.07)", color: "var(--nex-text-1)", border: "1px solid var(--nex-border)"
-                        }}>
-                          🏢 {comp}
-                        </span>
-                      ))}
+                      {(p.company_tags || ["Google", "Amazon"]).slice(0, 3).map((comp) => {
+                        const accent = companyBadgeColors[comp] || "var(--nex-primary)";
+                        return (
+                          <span key={comp} style={{
+                            padding: "2px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: "700",
+                            background: `${accent}15`, color: accent, border: `1px solid ${accent}30`
+                          }}>
+                            🏢 {comp}
+                          </span>
+                        );
+                      })}
                     </div>
 
                     {/* Topics */}

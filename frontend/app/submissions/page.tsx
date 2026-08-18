@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Link from "next/link";
 
@@ -55,11 +55,7 @@ export default function SubmissionsPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, accepted: 0, rate: "0%" });
 
-  useEffect(() => {
-    fetchSubmissions();
-  }, []);
-
-  async function fetchSubmissions() {
+  const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -80,7 +76,14 @@ export default function SubmissionsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSubmissions();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchSubmissions]);
 
   return (
     <div className="layout-sidebar">

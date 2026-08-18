@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { AdminJobRole, getAdminJobRoles } from "@/services/admin";
 
@@ -8,11 +8,7 @@ export default function AdminRolesPage() {
   const [roles, setRoles] = useState<AdminJobRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRoles();
-  }, []);
-
-  const loadRoles = async () => {
+  const loadRoles = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAdminJobRoles();
@@ -22,7 +18,14 @@ export default function AdminRolesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadRoles();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadRoles]);
 
   return (
     <div className="layout-sidebar">

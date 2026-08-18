@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import Sidebar from "@/components/dashboard/Sidebar";
-import Topbar from "@/components/dashboard/Topbar";
-
 import { getCurrentUser } from "@/services/auth";
 import { User } from "@/types/user";
 

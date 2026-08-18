@@ -74,15 +74,16 @@ export default function SignupPage() {
       localStorage.setItem("user", JSON.stringify(currentUser));
 
       window.location.replace(getDashboardPath(currentUser.role));
-    } catch (err: any) {
-      console.error("Signup error:", err.response?.data || err);
+    } catch (err: unknown) {
+      console.error("Signup error:", err);
       localStorage.removeItem("token");
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
 
-      const detail = err.response?.data?.detail;
+      const axiosError = err as { response?: { data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> } } };
+      const detail = axiosError.response?.data?.detail;
       if (Array.isArray(detail)) {
-        setError(detail.map((item: any) => `${item.loc?.join(".")}: ${item.msg}`).join(" | "));
+        setError(detail.map((item) => `${item.loc?.join(".") || "field"}: ${item.msg || "invalid"}`).join(" | "));
       } else if (typeof detail === "string") {
         setError(detail);
       } else {

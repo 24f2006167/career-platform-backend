@@ -96,7 +96,7 @@ function AILearningContent() {
     const oldCompleted = JSON.parse(localStorage.getItem(completedKey) || "[]");
 
     const alreadyDone = oldCompleted.some(
-      (item: any) =>
+      (item: { role?: string; skill?: string; skillId?: string; concept?: string }) =>
         item.role === role &&
         item.skill === skill &&
         item.skillId === skillId &&

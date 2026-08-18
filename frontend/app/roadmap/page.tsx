@@ -159,7 +159,7 @@ export default function RoadmapPage() {
 
               {/* Weekly plan */}
               <div className="stat-card">
-                <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--nex-text-3)", marginBottom: "14px" }}>📅 THIS WEEK'S PLAN</div>
+                <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--nex-text-3)", marginBottom: "14px" }}>📅 THIS WEEK&apos;S PLAN</div>
                 {[
                   { day: "Mon", task: "Graph BFS/DFS", type: "Problem" },
                   { day: "Tue", task: "Topological Sort", type: "Problem" },

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Link from "next/link";
 
 interface UserProfile {
   full_name: string;

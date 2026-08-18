@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 
+interface SystemHealth {
+  status?: string;
+  backend?: string;
+  version?: string;
+  database?: string;
+  ai_learning?: string;
+  admin?: string;
+  auth?: string;
+  coding_judge?: string;
+  interview_prep?: string;
+}
+
 export default function AdminSystemHealthPage() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkHealth();
-  }, []);
-
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("http://127.0.0.1:8000/health");
@@ -22,7 +30,14 @@ export default function AdminSystemHealthPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkHealth();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [checkHealth]);
 
   const services = [
     { name: "FastAPI Backend Core", status: health?.status === "ok" ? "Operational" : "Offline", icon: "⚡", lat: "12ms" },

@@ -43,8 +43,15 @@ const NAV_SECTIONS = [
   },
 ];
 
+interface SidebarUser {
+  email?: string;
+  full_name?: string;
+  username?: string;
+  role?: string | { name?: string };
+}
+
 interface SidebarProps {
-  user?: any;
+  user?: SidebarUser;
 }
 
 export default function Sidebar({ user }: SidebarProps) {
@@ -53,30 +60,40 @@ export default function Sidebar({ user }: SidebarProps) {
   const [displayName, setDisplayName] = useState("Candidate");
 
   useEffect(() => {
+    let name = "Candidate";
+    let admin = false;
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
         if (parsed.full_name || parsed.username) {
-          setDisplayName(parsed.full_name || parsed.username);
+          name = parsed.full_name || parsed.username;
         }
         if (
           parsed.email === "laptop18122022@gmail.com" ||
           parsed.role === "admin" ||
           parsed.role?.name === "admin"
         ) {
-          setIsAdmin(true);
+          admin = true;
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      // Fallback to defaults
     }
+    if (user?.full_name || user?.username) {
+      name = user.full_name || user.username || name;
+    }
+    const timer = setTimeout(() => {
+      setDisplayName(name);
+      setIsAdmin(admin);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [user]);
 
+  const userRoleName = typeof user?.role === "object" ? user?.role?.name : user?.role;
   const userIsAdmin =
     isAdmin ||
-    user?.role === "admin" ||
-    user?.role?.name === "admin" ||
+    userRoleName === "admin" ||
     user?.email === "laptop18122022@gmail.com";
 
   const visibleSections = NAV_SECTIONS.filter((sec) => {
@@ -186,7 +203,7 @@ export default function Sidebar({ user }: SidebarProps) {
               localStorage.removeItem("user");
               localStorage.removeItem("token");
               localStorage.removeItem("access_token");
-            } catch (e) {}
+            } catch {}
           }}
           style={{
             display: "flex", alignItems: "center", gap: "8px",

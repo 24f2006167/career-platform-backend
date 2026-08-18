@@ -3,10 +3,18 @@
 import { useState } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 
+interface ResumeAnalysisResult {
+  score: number;
+  matchRole: string;
+  strongKeywords: string[];
+  missingKeywords: string[];
+  improvements: string[];
+}
+
 export default function ResumePage() {
   const [file, setFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<ResumeAnalysisResult | null>(null);
 
   const handleSimulateAnalysis = () => {
     setAnalyzing(true);
@@ -59,6 +67,30 @@ export default function ResumePage() {
               <p style={{ fontSize: "13px", color: "var(--nex-text-3)", marginBottom: "20px", textAlign: "center" }}>
                 Drag and drop your file here or click below to analyze ATS compatibility.
               </p>
+
+              <input
+                type="file"
+                accept=".pdf,.docx,.doc"
+                id="resume-upload"
+                style={{ display: "none" }}
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <label
+                htmlFor="resume-upload"
+                style={{
+                  display: "inline-block",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  background: "var(--nex-surface)",
+                  border: "1px solid var(--nex-border)",
+                  fontSize: "12px",
+                  color: "var(--nex-text-2)",
+                  marginBottom: "16px",
+                  cursor: "pointer",
+                }}
+              >
+                {file ? `Selected: ${file.name}` : "Choose Resume File..."}
+              </label>
 
               <button
                 onClick={handleSimulateAnalysis}

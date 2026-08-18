@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { use } from "react";
 
@@ -149,28 +150,21 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
   const [activeTestTab, setActiveTestTab] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const [submissionsList, setSubmissionsList] = useState<any[]>([]);
+  interface SubmissionItem {
+    id?: string;
+    status: string;
+    code?: string;
+    language?: string;
+    runtime_ms?: number;
+    memory_kb?: number;
+    test_cases_passed?: number;
+    total_test_cases?: number;
+    created_at?: string;
+  }
 
-  useEffect(() => {
-    setResult(null);
-    setResultStatus(null);
-    setSubmitting(false);
-    setActiveTab("description");
+  const [submissionsList, setSubmissionsList] = useState<SubmissionItem[]>([]);
 
-    // Load saved code from localStorage if available
-    const saved = typeof window !== "undefined" ? localStorage.getItem(`nexvora_code_${slug}_${language}`) : null;
-    if (saved) {
-      setCode(saved);
-    } else {
-      setCode(STARTER_CODE[language] || "");
-    }
-
-    fetchProblem();
-    fetchSubmissionsList();
-    return () => { wsRef.current?.close(); };
-  }, [slug, language]);
-
-  async function fetchProblem() {
+  const fetchProblem = useCallback(async () => {
     setLoading(true);
     setResult(null);
     setResultStatus(null);
@@ -188,9 +182,9 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     } finally {
       setLoading(false);
     }
-  }
+  }, [slug]);
 
-  async function fetchSubmissionsList() {
+  const fetchSubmissionsList = useCallback(async () => {
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("access_token");
       if (!token) return;
@@ -204,7 +198,26 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     } catch (err) {
       console.error("Submissions history fetch error:", err);
     }
-  }
+  }, [slug]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setResult(null);
+      setResultStatus(null);
+      setSubmitting(false);
+      setActiveTab("description");
+      const saved = typeof window !== "undefined" ? localStorage.getItem(`nexvora_code_${slug}_${language}`) : null;
+      setCode(saved || STARTER_CODE[language] || "");
+    }, 0);
+
+    fetchProblem();
+    fetchSubmissionsList();
+    const currentWs = wsRef.current;
+    return () => {
+      clearTimeout(timer);
+      currentWs?.close();
+    };
+  }, [slug, language, fetchProblem, fetchSubmissionsList]);
 
   function handleCodeChange(newVal: string) {
     setCode(newVal);
@@ -291,12 +304,6 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     }
   }
 
-  const difficultyColor: Record<string, string> = {
-    easy: "var(--difficulty-easy)",
-    medium: "var(--difficulty-medium)",
-    hard: "var(--difficulty-hard)",
-  };
-
   if (loading) {
     return (
       <div className="layout-sidebar">
@@ -321,7 +328,7 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
       <div className="main-content" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
         {/* Topbar */}
         <div className="topbar" style={{ flexShrink: 0 }}>
-          <a href="/problems" style={{ color: "var(--nex-text-3)", textDecoration: "none", fontSize: "13px", marginRight: "12px" }}>← Problems</a>
+          <Link href="/problems" style={{ color: "var(--nex-text-3)", textDecoration: "none", fontSize: "13px", marginRight: "12px" }}>← Problems</Link>
           <span style={{ color: "var(--nex-border)" }}>|</span>
           <span style={{ marginLeft: "12px", fontSize: "15px", fontWeight: "600" }}>{problem.title}</span>
           <span className={`badge badge-${problem.difficulty}`} style={{ marginLeft: "10px" }}>
@@ -679,7 +686,7 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                      {submissionsList.map((sub: any, idx: number) => {
+                      {submissionsList.map((sub: SubmissionItem, idx: number) => {
                         const statusObj = STATUS_DISPLAY[sub.status] || { label: sub.status, color: "var(--nex-text-3)", icon: "📄" };
                         return (
                           <div key={sub.id || idx} style={{
@@ -696,8 +703,8 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
                                 </span>
                               </div>
                               <div style={{ fontSize: "12px", color: "var(--nex-text-3)", display: "flex", gap: "12px" }}>
-                                <span>{sub.test_cases_passed}/{sub.total_test_cases} test cases passed</span>
-                                {sub.runtime_ms > 0 && <span>· {sub.runtime_ms} ms</span>}
+                                <span>{sub.test_cases_passed ?? 0}/{sub.total_test_cases ?? 0} test cases passed</span>
+                                {typeof sub.runtime_ms === "number" && sub.runtime_ms > 0 && <span>· {sub.runtime_ms} ms</span>}
                                 <span>· {sub.created_at ? new Date(sub.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}</span>
                               </div>
                             </div>
@@ -705,8 +712,8 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
                               <button
                                 className="btn-secondary btn-sm"
                                 onClick={() => {
-                                  setCode(sub.code);
-                                  handleCodeChange(sub.code);
+                                  setCode(sub.code || "");
+                                  handleCodeChange(sub.code || "");
                                   alert("Restored code from this submission into Monaco Editor!");
                                 }}
                                 style={{ fontSize: "12px", whiteSpace: "nowrap" }}

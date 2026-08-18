@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Link from "next/link";
 
@@ -49,11 +49,7 @@ export default function ContestsPage() {
   const [joining, setJoining] = useState<string | null>(null);
   const [joined, setJoined] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchContests();
-  }, []);
-
-  async function fetchContests() {
+  const fetchContests = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("http://127.0.0.1:8000/api/v1/contests");
@@ -66,7 +62,14 @@ export default function ContestsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchContests();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchContests]);
 
   async function handleJoin(contestId: string) {
     const token = localStorage.getItem("access_token");

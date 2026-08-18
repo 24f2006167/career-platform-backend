@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Link from "next/link";
 
@@ -49,17 +49,14 @@ const RECENT_ACTIVITY = [
 export default function CandidateDashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [goals, setGoals] = useState(DAILY_GOALS);
-  const [greeting, setGreeting] = useState("Good morning");
-
-  useEffect(() => {
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
-    if (hour >= 12 && hour < 17) setGreeting("Good afternoon");
-    else if (hour >= 17) setGreeting("Good evening");
+    if (hour >= 12 && hour < 17) return "Good afternoon";
+    if (hour >= 17) return "Good evening";
+    return "Good morning";
+  });
 
-    fetchProfile();
-  }, []);
-
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
@@ -67,8 +64,8 @@ export default function CandidateDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) setProfile(await res.json());
+      else throw new Error();
     } catch {
-      // Use demo data
       setProfile({
         full_name: "Shitanshu",
         username: "shitanshu",
@@ -78,12 +75,19 @@ export default function CandidateDashboard() {
         medium_solved: 0,
         hard_solved: 0,
         streak: 0,
-        readiness_score: 0,
+        readiness_score: 36,
         target_role: "Software Engineer",
         experience_level: "beginner",
       });
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProfile();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchProfile]);
 
   const weakestSkills = [...SKILL_AREAS].sort((a, b) => a.score - b.score).slice(0, 3);
   const readiness = profile?.readiness_score ?? 36;
@@ -198,7 +202,7 @@ export default function CandidateDashboard() {
             {/* Daily Goals */}
             <div className="stat-card">
               <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "14px" }}>
-                TODAY'S GOALS
+                TODAY&apos;S GOALS
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {goals.map((goal) => (

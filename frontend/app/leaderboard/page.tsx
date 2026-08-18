@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Link from "next/link";
 
 interface LeaderboardEntry {
   rank: number;
@@ -52,11 +51,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [myRank, setMyRank] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
-
-  async function fetchLeaderboard() {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -69,6 +64,7 @@ export default function LeaderboardPage() {
       } else throw new Error();
     } catch {
       setUsers(DEMO_USERS);
+      setMyRank(7);
     } finally {
       setLoading(false);
     }
@@ -84,7 +80,14 @@ export default function LeaderboardPage() {
         setMyRank(d.rank);
       }
     } catch {}
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchLeaderboard();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchLeaderboard]);
 
   return (
     <div className="layout-sidebar">

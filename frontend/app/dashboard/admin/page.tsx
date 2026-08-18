@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 import {
@@ -31,11 +31,7 @@ export default function AdminDashboardPage() {
   const [result, setResult] = useState<GeneratedJobRoleResponse | null>(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAdminStats();
@@ -45,7 +41,14 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadStats();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadStats]);
 
   const handleGenerateRole = async (e: FormEvent) => {
     e.preventDefault();
@@ -207,7 +210,7 @@ export default function AdminDashboardPage() {
               ) : (
                 <div style={{ overflowY: "auto", flex: 1 }}>
                   <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", marginBottom: "14px" }}>
-                    <div style={{ fontSize: "16px", fontWeight: "800", color: "#a5b4fc" }}>{(result.role as any).title || result.role.name}</div>
+                    <div style={{ fontSize: "16px", fontWeight: "800", color: "#a5b4fc" }}>{result.role.name}</div>
                     <div style={{ fontSize: "12px", color: "var(--nex-text-2)", marginTop: "2px" }}>{result.role.description}</div>
                   </div>
 

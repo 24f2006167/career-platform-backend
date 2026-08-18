@@ -4,14 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { loginUser, getCurrentUser } from "@/services/auth";
 
+interface UserRole {
+  role?: string | { name?: string };
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getDashboardPath = (user: any) => {
-    const cleanRole = (user.role?.name || user.role || "candidate").toLowerCase();
+  const getDashboardPath = (user: UserRole) => {
+    const roleObj = typeof user.role === "object" && user.role !== null ? user.role.name : user.role;
+    const cleanRole = (roleObj || "candidate").toLowerCase();
     if (cleanRole === "admin") return "/dashboard/admin";
     if (cleanRole === "recruiter") return "/dashboard/recruiter";
     return "/dashboard/candidate";
@@ -47,13 +52,14 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(currentUser));
 
       window.location.replace(getDashboardPath(currentUser));
-    } catch (err: any) {
-      console.error("Login failed:", err.response?.data || err);
+    } catch (err: unknown) {
+      console.error("Login failed:", err);
       localStorage.removeItem("token");
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
 
-      const detail = err.response?.data?.detail;
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const detail = axiosErr.response?.data?.detail;
       if (typeof detail === "string") {
         setError(detail);
       } else {
@@ -195,7 +201,7 @@ export default function LoginPage() {
           </div>
 
           <p style={{ marginTop: "24px", textAlign: "center", fontSize: "14px", color: "var(--nex-text-3)" }}>
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" style={{ color: "var(--nex-primary)", fontWeight: "600", textDecoration: "none" }}>
               Sign up
             </Link>

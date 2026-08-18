@@ -25,11 +25,18 @@ export interface RoleOption {
   difficulty: string;
   skills: RoleSkill[];
 }
+interface BackendRole {
+  id: string | number;
+  name?: string;
+  title?: string;
+  description?: string;
+}
+
 export const getAllRoles = async (): Promise<RoleOption[]> => {
   try {
     const response = await API.get("/roles");
 
-    return response.data.map((role: any) => ({
+    return (response.data || []).map((role: BackendRole) => ({
       id: String(role.id),
       title: role.name || role.title || "Untitled Role",
       name: role.name || role.title || "Untitled Role",

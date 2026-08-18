@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { AdminSkill, getAdminSkills } from "@/services/admin";
 
@@ -8,11 +8,7 @@ export default function AdminSkillsPage() {
   const [skills, setSkills] = useState<AdminSkill[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSkills();
-  }, []);
-
-  const loadSkills = async () => {
+  const loadSkills = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAdminSkills();
@@ -22,7 +18,14 @@ export default function AdminSkillsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSkills();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loadSkills]);
 
   return (
     <div className="layout-sidebar">
