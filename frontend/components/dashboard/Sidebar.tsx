@@ -17,6 +17,7 @@ const NAV_SECTIONS = [
     label: "PRACTICE",
     items: [
       { icon: "💻", label: "Problems", href: "/problems" },
+      { icon: "📑", label: "DSA Sheet", href: "/dsa-sheet" },
       { icon: "📋", label: "Submissions", href: "/submissions" },
       { icon: "🏆", label: "Contests", href: "/contests" },
       { icon: "📊", label: "Leaderboard", href: "/leaderboard" },

@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 import API from "@/lib/api";
+import VSCodeEditor from "@/components/VSCodeEditor";
 
 interface TraceStep {
   step: number;
@@ -627,17 +628,12 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ trackI
                     </button>
                   </div>
 
-                  {/* Code Textarea / Sandbox */}
-                  <textarea
-                    value={currentCode}
-                    onChange={(e) => setEditableCode(e.target.value)}
-                    spellCheck={false}
-                    style={{
-                      width: "100%", height: "220px", padding: "18px", margin: 0,
-                      fontFamily: "Fira Code, monospace, consolas", fontSize: "13px", lineHeight: "1.6",
-                      color: "#e0e7ff", background: "transparent", border: "none", resize: "vertical",
-                      outline: "none", whiteSpace: "pre"
-                    }}
+                  {/* VS Code Dark+ Code Editor Sandbox */}
+                  <VSCodeEditor
+                    code={currentCode}
+                    onChange={(val) => setEditableCode(val)}
+                    language={selectedLang}
+                    minHeight="240px"
                   />
                 </div>
 
