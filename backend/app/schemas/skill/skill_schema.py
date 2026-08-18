@@ -2,7 +2,7 @@ from pydantic import (
     BaseModel,
     Field
 )
-
+from typing import Optional
 from uuid import UUID
 
 
@@ -15,6 +15,6 @@ class SkillCreateSchema(
         max_length=100
     )
 
-    description: str | None = None
+    description: Optional[str] = None
 
     category_id: UUID

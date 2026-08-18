@@ -8,7 +8,12 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal, Base, engine
+from app.core.exceptions import register_exception_handlers
+from app.middleware.auth_middleware import AuthMiddleware
+from app.middleware.logging_middleware import LoggingMiddleware
+from app.middleware.rate_limit_middleware import RateLimitMiddleware
 from app.routers.interview_router import router as interview_router
+from app.routers.candidate_role_router import router as candidate_role_router
 # IMPORT ALL MODELS BEFORE create_all
 from app.models.user import User
 from app.models.role import Role
@@ -21,6 +26,9 @@ from app.models.test_case import TestCase
 from app.models.submission import Submission
 from app.models.achievement import Achievement, UserAchievement
 from app.models.progress import UserProgress, Contest, ContestParticipant
+from app.models.exam import Exam, Question, Option, ExamResult
+from app.models.leaderboard import LeaderboardSnapshot
+from app.models.ai_feedback import AIFeedback, ResumeAnalysis, MockInterviewSession
 
 from app.utils.security import hash_password
 
@@ -43,6 +51,11 @@ app = FastAPI(
     description="AI-powered career roadmap, learning, testing, and admin management platform.",
 )
 
+register_exception_handlers(app)
+
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(AuthMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=200)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -102,6 +115,7 @@ app.include_router(problems_router)
 app.include_router(submissions_router)
 app.include_router(profile_router)
 app.include_router(leaderboard_router)
+app.include_router(candidate_role_router)
 
 
 @app.get("/")

@@ -1,6 +1,6 @@
 import os
 import json
-
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -27,7 +27,7 @@ SYSTEM_ROLES = ["admin", "candidate", "recruiter"]
 
 class AdminJobRoleGenerateRequest(BaseModel):
     title: str
-    description: str | None = None
+    description: Optional[str] = None
 
 
 def require_admin(current_user: User):
@@ -66,7 +66,7 @@ def fallback_role_skills(role_title: str):
     ]
 
 
-def generate_role_skills_with_ai(role_title: str, description: str | None):
+def generate_role_skills_with_ai(role_title: str, description: Optional[str]):
     prompt = f"""
 You are an expert career roadmap designer.
 
@@ -110,7 +110,7 @@ Rules:
         return fallback_role_skills(role_title)
 
 
-def get_or_create_category(db: Session, name: str, description: str | None = None):
+def get_or_create_category(db: Session, name: str, description: Optional[str] = None):
     category = db.query(SkillCategory).filter(SkillCategory.name.ilike(name)).first()
 
     if category:
@@ -131,9 +131,10 @@ def get_or_create_category(db: Session, name: str, description: str | None = Non
 def get_or_create_skill(
     db: Session,
     name: str,
-    description: str | None,
-    category_id: str | None,
+    description: Optional[str],
+    category_id: Optional[str],
 ):
+
     skill = db.query(Skill).filter(Skill.name.ilike(name)).first()
 
     if skill:

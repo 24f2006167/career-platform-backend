@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 from pydantic import BaseModel
 
 from app.dependencies.current_user import get_current_user
@@ -21,7 +22,7 @@ class AILearningRequest(BaseModel):
     role: str
     skill: str
     concept: str
-    type: str | None = "learning"
+    type: Optional[str] = "learning"
 
 
 class AIChatRequest(BaseModel):
@@ -29,7 +30,7 @@ class AIChatRequest(BaseModel):
     skill: str
     concept: str
     question: str
-    type: str | None = "learning"
+    type: Optional[str] = "learning"
 
 
 class AICheckAnswerRequest(BaseModel):
@@ -40,7 +41,8 @@ class AICheckAnswerRequest(BaseModel):
     expected_solution: str
     student_answer: str
     attempt: int
-    type: str | None = "learning"
+    type: Optional[str] = "learning"
+
 
 
 @router.post("/generate")

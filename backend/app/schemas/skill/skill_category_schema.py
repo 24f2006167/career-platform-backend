@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class SkillCategoryCreateSchema(
@@ -10,4 +11,4 @@ class SkillCategoryCreateSchema(
         max_length=100
     )
 
-    description: str | None = None
+    description: Optional[str] = None

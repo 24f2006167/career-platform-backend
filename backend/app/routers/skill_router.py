@@ -6,7 +6,9 @@ from fastapi import (
 )
 
 from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy.orm import Session
+
 
 from app.core.database import get_db
 from app.models.user import User
@@ -41,8 +43,9 @@ router = APIRouter(
 class SkillProgressRequest(BaseModel):
     skill_id: str
     xp: int = 10
-    level: int | None = None
+    level: Optional[int] = None
     is_verified: bool = False
+
 
 
 # GET ALL SKILL CATEGORIES
