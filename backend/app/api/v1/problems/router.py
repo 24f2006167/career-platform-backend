@@ -19,6 +19,7 @@ from app.core.database import get_db
 from app.models.problem import Problem
 from app.models.test_case import TestCase
 from app.models.submission import Submission
+from app.dependencies.auth import get_optional_current_user
 from app.dependencies.current_user import get_current_user
 from app.models.user import User
 
@@ -101,7 +102,7 @@ def list_problems(
     company: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """List problems with filters. Returns paginated results."""
     query = db.query(Problem).filter(Problem.is_active == True)
@@ -160,7 +161,7 @@ def list_problems(
 def get_problem(
     slug: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """Get full problem details including public test cases."""
     problem = db.query(Problem).filter(

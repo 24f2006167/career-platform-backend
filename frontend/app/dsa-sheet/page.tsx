@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { CompanyLogo } from "@/app/problems/page";
 
 /* ─── TYPES ─── */
 interface Problem {
@@ -426,7 +427,11 @@ export default function DSASheetPage() {
   const [proMode, setProMode] = useState(false);
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
   const [bookmarkedMap, setBookmarkedMap] = useState<Record<string, boolean>>({});
-  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  
+  // ALL 34 DAYS CLOSED BY DEFAULT
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(
+    () => new Set(DSA_SHEET.map(d => `d${d.day}`))
+  );
 
   const allProblems = DSA_SHEET.flatMap(d => d.problems);
   const totalCount = allProblems.length;
@@ -437,6 +442,16 @@ export default function DSASheetPage() {
     next.has(key) ? next.delete(key) : next.add(key);
     return next;
   });
+
+  const toggleExpandAll = () => {
+    if (collapsedDays.size === 0) {
+      // Collapse all
+      setCollapsedDays(new Set(DSA_SHEET.map(d => `d${d.day}`)));
+    } else {
+      // Expand all
+      setCollapsedDays(new Set());
+    }
+  };
 
   return (
     <div className="layout-sidebar">
@@ -531,17 +546,30 @@ export default function DSASheetPage() {
             </div>
           </div>
 
-          {/* Search */}
+          {/* Search & Accordion Controls */}
           {(activeTab === "DSA Sheet" || activeTab === "DP Sheet") && (
-            <div style={{ marginBottom: "12px" }}>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="🔍 Search problem, topic, company..."
-                className="nex-input"
-                style={{ padding: "9px 16px", fontSize: "13px", maxWidth: "420px" }}
-              />
+            <div style={{ display: "flex", gap: "10px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ position: "relative", flex: 1, maxWidth: "420px" }}>
+                <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--nex-text-3)", fontSize: "14px" }}>🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search problem, algorithm, company..."
+                  className="nex-input"
+                  style={{ paddingLeft: "36px", paddingRight: "16px", fontSize: "13px" }}
+                />
+              </div>
+              <button
+                onClick={toggleExpandAll}
+                className="btn-ghost btn-sm"
+                style={{ borderRadius: "8px", fontSize: "12px", fontWeight: "700", border: "1px solid var(--nex-border)" }}
+              >
+                {collapsedDays.size === 0 ? "📁 Collapse All Days" : "📂 Expand All Days"}
+              </button>
+              <span style={{ fontSize: "12px", color: "var(--nex-text-3)" }}>
+                💡 Click any day below to expand and view its questions
+              </span>
             </div>
           )}
         </div>
@@ -551,7 +579,7 @@ export default function DSASheetPage() {
 
           {/* ══ DSA SHEET ══ */}
           {activeTab === "DSA Sheet" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {DSA_SHEET.map(day => {
                 const key = `d${day.day}`;
                 const collapsed = collapsedDays.has(key);
@@ -569,15 +597,21 @@ export default function DSASheetPage() {
                     {/* Day header */}
                     <button onClick={() => toggleCollapse(key)} style={{
                       width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "12px 18px", background: "transparent", border: "none", cursor: "pointer"
+                      padding: "14px 20px", background: collapsed ? "transparent" : "var(--nex-surface)", border: "none", cursor: "pointer",
+                      transition: "background 0.2s"
                     }}>
-                      <span style={{ fontSize: "13px", fontWeight: "800", color: "#f97316" }}>{day.title}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ height: "4px", width: "80px", borderRadius: "999px", background: "var(--nex-surface)" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "800", color: "#f97316" }}>{day.title}</span>
+                        <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "999px", background: "rgba(249,115,22,0.1)", color: "#f97316", fontWeight: "700" }}>
+                          {day.problems.length} Questions
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ height: "5px", width: "90px", borderRadius: "999px", background: "var(--nex-surface)", overflow: "hidden" }}>
                           <div style={{ height: "100%", width: `${done / day.problems.length * 100}%`, background: "#f97316", borderRadius: "999px" }} />
                         </div>
-                        <span style={{ fontSize: "11px", color: "var(--nex-text-3)", minWidth: "40px" }}>{done}/{day.problems.length}</span>
-                        <span style={{ color: "var(--nex-text-3)", fontSize: "12px" }}>{collapsed ? "▼" : "▲"}</span>
+                        <span style={{ fontSize: "12px", color: "var(--nex-text-3)", minWidth: "40px", fontWeight: "600" }}>{done}/{day.problems.length}</span>
+                        <span style={{ color: "#f97316", fontSize: "13px", fontWeight: "900" }}>{collapsed ? "▼ Expand" : "▲ Close"}</span>
                       </div>
                     </button>
 
@@ -587,7 +621,7 @@ export default function DSASheetPage() {
                           <thead>
                             <tr style={{ borderTop: "1px solid var(--nex-border)", color: "var(--nex-text-3)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                               {["", "Problem", "Article", "Practice", "Level", "Timer", "Company", "Save"].map((h, i) => (
-                                <th key={i} style={{ padding: "9px 12px", textAlign: i > 1 ? "center" : "left", fontWeight: "600", background: "rgba(255,255,255,0.02)" }}>{h}</th>
+                                <th key={i} style={{ padding: "10px 14px", textAlign: i > 1 ? "center" : "left", fontWeight: "700", background: "rgba(255,255,255,0.02)" }}>{h}</th>
                               ))}
                             </tr>
                           </thead>
@@ -599,81 +633,82 @@ export default function DSASheetPage() {
                               return (
                                 <tr key={pr.id} style={{ borderTop: "1px solid rgba(255,255,255,0.04)", background: done ? "rgba(16,185,129,0.02)" : "transparent" }}>
                                   {/* Checkbox */}
-                                  <td style={{ padding: "11px 12px", width: "36px" }}>
+                                  <td style={{ padding: "12px 14px", width: "36px" }}>
                                     <input type="checkbox" checked={done}
                                       onChange={() => setCompletedMap(p => ({ ...p, [pr.id]: !p[pr.id] }))}
-                                      style={{ width: "15px", height: "15px", cursor: "pointer", accentColor: "#f97316" }} />
+                                      style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#f97316" }} />
                                   </td>
                                   {/* Title */}
-                                  <td style={{ padding: "11px 12px", maxWidth: "280px" }}>
-                                    <span style={{ fontWeight: "600", color: done ? "var(--nex-text-3)" : "var(--nex-text-1)", textDecoration: done ? "line-through" : "none", lineHeight: "1.4" }}>
+                                  <td style={{ padding: "12px 14px", maxWidth: "280px" }}>
+                                    <span style={{ fontWeight: "700", color: done ? "var(--nex-text-3)" : "var(--nex-text-1)", textDecoration: done ? "line-through" : "none", lineHeight: "1.4" }}>
                                       {pr.title}
                                     </span>
                                   </td>
                                   {/* Article */}
-                                  <td style={{ padding: "11px 12px", textAlign: "center" }}>
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
                                     {pr.articleUrl ? (
                                       <a href={pr.articleUrl} target="_blank" rel="noreferrer"
                                         title="Read article (TakeUForward)"
                                         style={{
                                           display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                          width: "30px", height: "30px", borderRadius: "50%",
+                                          width: "32px", height: "32px", borderRadius: "50%",
                                           background: "var(--nex-surface)", border: "1px solid var(--nex-border)",
-                                          color: "var(--nex-text-2)", fontSize: "10px", fontWeight: "800", textDecoration: "none"
+                                          color: "var(--nex-text-2)", fontSize: "11px", fontWeight: "800", textDecoration: "none"
                                         }}>
                                         M≡
                                       </a>
                                     ) : (
-                                      <span style={{ fontSize: "9px", color: "var(--nex-text-3)", lineHeight: "1.2" }}>Coming<br />Soon</span>
+                                      <span style={{ fontSize: "10px", color: "var(--nex-text-3)", lineHeight: "1.2" }}>Coming<br />Soon</span>
                                     )}
                                   </td>
                                   {/* Practice — LeetCode */}
-                                  <td style={{ padding: "11px 12px", textAlign: "center" }}>
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
                                     {pr.leetcodeUrl ? (
                                       <a href={pr.leetcodeUrl} target="_blank" rel="noreferrer"
                                         title="Practice on LeetCode / GFG"
                                         style={{
                                           display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                          width: "30px", height: "30px", borderRadius: "50%",
-                                          background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)",
-                                          color: "#f97316", fontSize: "11px", fontWeight: "800", textDecoration: "none"
+                                          width: "32px", height: "32px", borderRadius: "50%",
+                                          background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)",
+                                          color: "#f97316", fontSize: "12px", fontWeight: "800", textDecoration: "none"
                                         }}>
                                         {"</>"}
                                       </a>
                                     ) : (
-                                      <span style={{ fontSize: "9px", color: "var(--nex-text-3)" }}>—</span>
+                                      <span style={{ fontSize: "10px", color: "var(--nex-text-3)" }}>—</span>
                                     )}
                                   </td>
                                   {/* Level */}
-                                  <td style={{ padding: "11px 12px", textAlign: "center" }}>
-                                    <span style={{ fontSize: "10px", fontWeight: "700", padding: "3px 8px", borderRadius: "5px", color: dc.color, background: dc.bg }}>
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                    <span style={{ fontSize: "11px", fontWeight: "800", padding: "3px 9px", borderRadius: "6px", color: dc.color, background: dc.bg }}>
                                       {pr.difficulty}
                                     </span>
                                   </td>
                                   {/* Timer */}
-                                  <td style={{ padding: "11px 12px", textAlign: "center" }}>
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
                                     <span style={{ fontSize: "11px", color: "var(--nex-text-3)", fontWeight: "600" }}>30Min</span>
                                   </td>
-                                  {/* Company */}
-                                  <td style={{ padding: "11px 12px" }}>
-                                    <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                                      {pr.companies.slice(0, 2).map((c, i) => (
+                                  {/* Company with Real Brand Logos */}
+                                  <td style={{ padding: "12px 14px" }}>
+                                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                                      {pr.companies.slice(0, 3).map((c, i) => (
                                         <span key={i} title={c} style={{
-                                          width: "20px", height: "20px", borderRadius: "50%",
-                                          background: "var(--nex-surface)", border: "1px solid var(--nex-border)",
                                           display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                          fontSize: "7px", color: "var(--nex-text-2)", fontWeight: "800"
-                                        }}>{c[0]}</span>
+                                          width: "22px", height: "22px", borderRadius: "50%",
+                                          background: "var(--nex-surface)", border: "1px solid var(--nex-border)"
+                                        }}>
+                                          <CompanyLogo name={c} size={13} />
+                                        </span>
                                       ))}
-                                      {pr.companies.length > 2 && (
-                                        <span style={{ fontSize: "9px", color: "var(--nex-text-3)" }}>+{pr.companies.length - 2}</span>
+                                      {pr.companies.length > 3 && (
+                                        <span style={{ fontSize: "10px", color: "var(--nex-text-3)", fontWeight: "700" }}>+{pr.companies.length - 3}</span>
                                       )}
                                     </div>
                                   </td>
                                   {/* Save */}
-                                  <td style={{ padding: "11px 12px", textAlign: "center" }}>
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
                                     <button onClick={() => setBookmarkedMap(p => ({ ...p, [pr.id]: !p[pr.id] }))}
-                                      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", color: saved ? "#f97316" : "var(--nex-text-3)" }}
+                                      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "15px", color: saved ? "#f97316" : "var(--nex-text-3)" }}
                                       title={saved ? "Bookmarked" : "Bookmark"}>
                                       🔖
                                     </button>
