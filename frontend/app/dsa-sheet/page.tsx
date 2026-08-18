@@ -4,15 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/dashboard/Sidebar";
 
-/* ─────────────── TYPES ─────────────── */
+/* ───────────────── TYPES ───────────────── */
 interface Problem {
   id: string;
   title: string;
   slug: string;
   difficulty: "Easy" | "Medium" | "Hard";
   companies: string[];
-  hasArticle: boolean;
-  hasVideo: boolean;
+  articleUrl: string | null;
+  youtubeUrl: string | null;
   timer: string;
   level: "Beginner" | "Pro";
 }
@@ -28,13 +28,14 @@ interface DPSection {
   problems: Problem[];
 }
 
-/* ─────────────── HELPERS ─────────────── */
+/* ───────────────── HELPERS ───────────────── */
 function p(
   id: string,
   title: string,
   difficulty: "Easy" | "Medium" | "Hard",
   companies: string[],
-  hasArticle = true,
+  articleUrl: string | null = null,
+  youtubeUrl: string | null = null,
   level: "Beginner" | "Pro" = "Beginner"
 ): Problem {
   return {
@@ -43,41 +44,41 @@ function p(
     slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     difficulty,
     companies,
-    hasArticle,
-    hasVideo: true,
+    articleUrl,
+    youtubeUrl,
     timer: "30Min",
     level,
   };
 }
 
-/* ─────────────── DSA SHEET DATA (34 Days) ─────────────── */
+/* ───────────────── DSA SHEET DATA (34 Days) ───────────────── */
 const DSA_SHEET: DaySheet[] = [
   {
     day: 1, title: "Day 1 : Array (Part 1)",
     problems: [
-      p("d1p1", "Majority Element", "Easy", ["Amazon", "Google"]),
-      p("d1p2", "Repeat & missing number", "Easy", ["Amazon"]),
-      p("d1p3", "Merge 2 sorted array without extra space", "Medium", ["Qualcomm", "Google"], false),
-      p("d1p4", "Single Number", "Easy", ["Apple", "Amazon", "Meta"]),
-      p("d1p5", "Stock Buy & Sell", "Easy", ["Google", "Meta"], false),
-      p("d1p6", "Pow (x^n)", "Medium", ["LinkedIn", "Amazon"], false, "Pro"),
+      p("d1p1", "Majority Element", "Easy", ["Amazon", "Google"], "https://takeuforward.org/data-structure/find-the-majority-element-that-occurs-more-than-n-2-times/", "https://www.youtube.com/watch?v=npowH4yn0XM"),
+      p("d1p2", "Repeat & missing number", "Easy", ["Amazon"], "https://takeuforward.org/data-structure/find-the-repeating-and-missing-numbers/", "https://www.youtube.com/watch?v=2D0D8HE6uak"),
+      p("d1p3", "Merge 2 sorted array without extra space", "Medium", ["Qualcomm", "Google"], null, "https://www.youtube.com/watch?v=n7uwj04E0I4"),
+      p("d1p4", "Single Number", "Easy", ["Apple", "Amazon", "Meta"], "https://takeuforward.org/data-structure/single-number-xor/", "https://www.youtube.com/watch?v=bYw780k9h3M"),
+      p("d1p5", "Stock Buy & Sell", "Easy", ["Google", "Meta"], null, "https://www.youtube.com/watch?v=ioFPBdChabY"),
+      p("d1p6", "Pow (x^n)", "Medium", ["LinkedIn", "Amazon"], null, "https://www.youtube.com/watch?v=l0YC3876qxg", "Pro"),
     ],
   },
   {
     day: 2, title: "Day 2 : Array (Part 2)",
     problems: [
-      p("d2p1", "Kadane's Algorithm", "Medium", ["Microsoft", "Meta"], true, "Pro"),
+      p("d2p1", "Kadane's Algorithm", "Medium", ["Microsoft", "Meta"], null, null, "Pro"),
       p("d2p2", "Container with most water", "Medium", ["Amazon", "Zepto"]),
       p("d2p3", "Sort array of 0s 1s & 2s", "Medium", ["Myntra", "Amazon"]),
-      p("d2p4", "3Sum", "Medium", ["Myntra", "Google"], true, "Pro"),
-      p("d2p5", "4Sum", "Medium", ["Amazon", "Uber"], true, "Pro"),
-      p("d2p6", "Search in 2d matrix", "Medium", ["Microsoft", "Google"], false),
+      p("d2p4", "3Sum", "Medium", ["Myntra", "Google"], null, null, "Pro"),
+      p("d2p5", "4Sum", "Medium", ["Amazon", "Uber"], null, null, "Pro"),
+      p("d2p6", "Search in 2d matrix", "Medium", ["Microsoft", "Google"], null, null),
     ],
   },
   {
     day: 3, title: "Day 3 : Array (Part 3)",
     problems: [
-      p("d3p1", "Next permutation", "Medium", ["Google", "Ola", "Amazon"], true, "Pro"),
+      p("d3p1", "Next permutation", "Medium", ["Google", "Ola", "Amazon"], null, null, "Pro"),
       p("d3p2", "Merge overlapping intervals", "Medium", ["Google"]),
       p("d3p3", "Longest substring without repeating", "Medium", ["Amazon", "Google"]),
       p("d3p4", "Set matrix zeroes", "Medium", ["Amazon"]),
@@ -88,19 +89,19 @@ const DSA_SHEET: DaySheet[] = [
   {
     day: 4, title: "Day 4 : Array (Part 4)",
     problems: [
-      p("d4p1", "Subarray sum equals k", "Medium", ["Microsoft", "Google"], true, "Pro"),
+      p("d4p1", "Subarray sum equals k", "Medium", ["Microsoft", "Google"], null, null, "Pro"),
       p("d4p2", "Find Duplicate", "Medium", ["Apple", "Amazon"]),
       p("d4p3", "Count Inversions", "Hard", ["Google", "Amazon"]),
-      p("d4p4", "Spiral Matrix", "Medium", ["Zepto", "Apple"], false),
-      p("d4p5", "Search in Sorted matrix II", "Medium", ["Google", "Amazon"], false),
+      p("d4p4", "Spiral Matrix", "Medium", ["Zepto", "Apple"], null, null),
+      p("d4p5", "Search in Sorted matrix II", "Medium", ["Google", "Amazon"], null, null),
     ],
   },
   {
     day: 5, title: "Day 5 : Array (Part 5)",
     problems: [
       p("d5p1", "Trapping Rainwater", "Hard", ["Samsung"]),
-      p("d5p2", "Sliding Window Maximum", "Hard", ["Amazon", "Google"], true, "Pro"),
-      p("d5p3", "Largest Rectangle in a Histogram", "Hard", ["Google", "Amazon"], true, "Pro"),
+      p("d5p2", "Sliding Window Maximum", "Hard", ["Amazon", "Google"], null, null, "Pro"),
+      p("d5p3", "Largest Rectangle in a Histogram", "Hard", ["Google", "Amazon"], null, null, "Pro"),
       p("d5p4", "Reverse Pairs", "Hard", ["Amazon"]),
     ],
   },
@@ -109,8 +110,8 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d6p1", "Valid Palindrome", "Easy", ["Amazon", "Apple"]),
       p("d6p2", "Valid Anagram", "Easy", ["Dunzo", "Microsoft"]),
-      p("d6p3", "Reverse Words in String", "Medium", ["Amazon", "LinkedIn"], true, "Pro"),
-      p("d6p4", "Remove All Occurrences", "Medium", ["Google"], false),
+      p("d6p3", "Reverse Words in String", "Medium", ["Amazon", "LinkedIn"], null, null, "Pro"),
+      p("d6p4", "Remove All Occurrences", "Medium", ["Google"], null, null),
       p("d6p5", "Permutation in String", "Medium", ["Amazon", "Uber"]),
       p("d6p6", "String Compression", "Medium", ["Google", "Amazon"]),
     ],
@@ -119,7 +120,7 @@ const DSA_SHEET: DaySheet[] = [
     day: 7, title: "Day 7 : Strings (Part 2)",
     problems: [
       p("d7p1", "Longest Palindromic Substring", "Medium", ["Amazon", "Microsoft"]),
-      p("d7p2", "Minimum Window Substring", "Hard", ["Amazon", "Meta"], true, "Pro"),
+      p("d7p2", "Minimum Window Substring", "Hard", ["Amazon", "Meta"], null, null, "Pro"),
       p("d7p3", "Count and Say", "Medium", ["Amazon"]),
       p("d7p4", "Group Anagrams", "Medium", ["Amazon", "Uber"]),
       p("d7p5", "Encode and Decode Strings", "Medium", ["Google"]),
@@ -134,8 +135,8 @@ const DSA_SHEET: DaySheet[] = [
       p("d8p3", "Find Minimum in Rotated Sorted Array", "Medium", ["Microsoft", "Apple"]),
       p("d8p4", "Koko Eating Bananas", "Medium", ["Amazon"]),
       p("d8p5", "Capacity to Ship Packages", "Medium", ["Amazon"]),
-      p("d8p6", "Median of Two Sorted Arrays", "Hard", ["Google", "Amazon"], true, "Pro"),
-      p("d8p7", "Aggressive Cows / Book Allocation", "Hard", ["Amazon", "Adobe"], true, "Pro"),
+      p("d8p6", "Median of Two Sorted Arrays", "Hard", ["Google", "Amazon"], null, null, "Pro"),
+      p("d8p7", "Aggressive Cows / Book Allocation", "Hard", ["Amazon", "Adobe"], null, null, "Pro"),
     ],
   },
   {
@@ -146,7 +147,7 @@ const DSA_SHEET: DaySheet[] = [
       p("d9p3", "Permutations", "Medium", ["Amazon", "LinkedIn"]),
       p("d9p4", "Combination Sum", "Medium", ["Amazon"]),
       p("d9p5", "Combination Sum II", "Medium", ["Amazon"]),
-      p("d9p6", "Palindrome Partitioning", "Medium", ["Amazon", "Google"], true, "Pro"),
+      p("d9p6", "Palindrome Partitioning", "Medium", ["Amazon", "Google"], null, null, "Pro"),
     ],
   },
   {
@@ -156,7 +157,7 @@ const DSA_SHEET: DaySheet[] = [
       p("d10p2", "N-Queens", "Hard", ["Google", "Amazon"]),
       p("d10p3", "Sudoku Solver", "Hard", ["Amazon", "Uber"]),
       p("d10p4", "Rat in a Maze", "Medium", ["Zoho", "Amazon"]),
-      p("d10p5", "Word Break", "Medium", ["Amazon", "Google"], true, "Pro"),
+      p("d10p5", "Word Break", "Medium", ["Amazon", "Google"], null, null, "Pro"),
     ],
   },
   {
@@ -175,7 +176,7 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d12p1", "Remove Nth Node from End", "Medium", ["Amazon", "Microsoft"]),
       p("d12p2", "Intersection of Two Linked Lists", "Easy", ["Amazon"]),
-      p("d12p3", "LRU Cache", "Medium", ["Amazon", "Uber"], true, "Pro"),
+      p("d12p3", "LRU Cache", "Medium", ["Amazon", "Uber"], null, null, "Pro"),
       p("d12p4", "Rotate Linked List", "Medium", ["Amazon"]),
       p("d12p5", "Flatten a Linked List", "Medium", ["Amazon", "Google"]),
       p("d12p6", "Copy List with Random Pointer", "Medium", ["Amazon", "Meta"]),
@@ -195,11 +196,11 @@ const DSA_SHEET: DaySheet[] = [
   {
     day: 14, title: "Day 14 : Stacks & Queues (Part 2)",
     problems: [
-      p("d14p1", "Largest Rectangle in Histogram", "Hard", ["Google", "Amazon"], true, "Pro"),
+      p("d14p1", "Largest Rectangle in Histogram", "Hard", ["Google", "Amazon"], null, null, "Pro"),
       p("d14p2", "Maximal Rectangle", "Hard", ["Amazon"]),
       p("d14p3", "Asteroid Collision", "Medium", ["Amazon"]),
       p("d14p4", "Online Stock Span", "Medium", ["Amazon"]),
-      p("d14p5", "132 Pattern", "Medium", ["Amazon"], true, "Pro"),
+      p("d14p5", "132 Pattern", "Medium", ["Amazon"], null, null, "Pro"),
     ],
   },
   {
@@ -207,7 +208,7 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d15p1", "Design Browser History", "Medium", ["Amazon"]),
       p("d15p2", "Number of Recent Calls", "Easy", ["Google"]),
-      p("d15p3", "Maximum Frequency Stack", "Hard", ["Amazon", "Google"], true, "Pro"),
+      p("d15p3", "Maximum Frequency Stack", "Hard", ["Amazon", "Google"], null, null, "Pro"),
       p("d15p4", "Sliding Window Maximum", "Hard", ["Amazon", "Lyft"]),
       p("d15p5", "Monotonic Queue", "Medium", ["Amazon", "Google"]),
     ],
@@ -227,7 +228,7 @@ const DSA_SHEET: DaySheet[] = [
     day: 17, title: "Day 17 : Binary Trees (Part 2)",
     problems: [
       p("d17p1", "Diameter of Binary Tree", "Easy", ["Amazon", "Google"]),
-      p("d17p2", "Binary Tree Maximum Path Sum", "Hard", ["Amazon", "Meta"], true, "Pro"),
+      p("d17p2", "Binary Tree Maximum Path Sum", "Hard", ["Amazon", "Meta"], null, null, "Pro"),
       p("d17p3", "Count Complete Tree Nodes", "Medium", ["Google"]),
       p("d17p4", "Balanced Binary Tree", "Easy", ["Amazon"]),
       p("d17p5", "Lowest Common Ancestor", "Medium", ["Amazon", "Meta"]),
@@ -239,7 +240,7 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d18p1", "Construct Tree from Preorder Inorder", "Medium", ["Amazon", "Microsoft"]),
       p("d18p2", "Construct Tree from Postorder Inorder", "Medium", ["Amazon"]),
-      p("d18p3", "Serialize and Deserialize Binary Tree", "Hard", ["Amazon", "Google"], true, "Pro"),
+      p("d18p3", "Serialize and Deserialize Binary Tree", "Hard", ["Amazon", "Google"], null, null, "Pro"),
       p("d18p4", "Flatten Binary Tree to Linked List", "Medium", ["Amazon"]),
       p("d18p5", "Maximum Width of Binary Tree", "Medium", ["Amazon", "Google"]),
       p("d18p6", "Sum of Nodes at K Distance", "Medium", ["Amazon", "Flipkart"]),
@@ -253,7 +254,7 @@ const DSA_SHEET: DaySheet[] = [
       p("d19p3", "Top View of Binary Tree", "Medium", ["Amazon"]),
       p("d19p4", "Bottom View of Binary Tree", "Medium", ["Flipkart", "Amazon"]),
       p("d19p5", "Vertical Order Traversal", "Hard", ["Amazon", "Google"]),
-      p("d19p6", "Burning Tree Problem", "Hard", ["Amazon", "Flipkart"], true, "Pro"),
+      p("d19p6", "Burning Tree Problem", "Hard", ["Amazon", "Flipkart"], null, null, "Pro"),
     ],
   },
   {
@@ -273,7 +274,7 @@ const DSA_SHEET: DaySheet[] = [
       p("d21p2", "Floor and Ceil in BST", "Medium", ["Flipkart", "Amazon"]),
       p("d21p3", "Two Sum in BST", "Easy", ["Amazon"]),
       p("d21p4", "BST to Greater Sum Tree", "Medium", ["Amazon"]),
-      p("d21p5", "Recover BST", "Hard", ["Amazon"], true, "Pro"),
+      p("d21p5", "Recover BST", "Hard", ["Amazon"], null, null, "Pro"),
     ],
   },
   {
@@ -281,7 +282,7 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d22p1", "Construct BST from Preorder", "Medium", ["Amazon", "Microsoft"]),
       p("d22p2", "Convert Sorted Array to BST", "Easy", ["Amazon"]),
-      p("d22p3", "Merge Two BSTs", "Hard", ["Amazon", "Uber"], true, "Pro"),
+      p("d22p3", "Merge Two BSTs", "Hard", ["Amazon", "Uber"], null, null, "Pro"),
       p("d22p4", "Largest BST in Binary Tree", "Hard", ["Amazon"]),
       p("d22p5", "BST Iterator", "Medium", ["Amazon", "Meta"]),
     ],
@@ -292,7 +293,7 @@ const DSA_SHEET: DaySheet[] = [
       p("d23p1", "Kth Largest Element in an Array", "Medium", ["Amazon", "Microsoft"]),
       p("d23p2", "Top K Frequent Elements", "Medium", ["Amazon", "Meta"]),
       p("d23p3", "K Closest Points to Origin", "Medium", ["Amazon", "Meta"]),
-      p("d23p4", "Find Median from Data Stream", "Hard", ["Amazon", "Google"], true, "Pro"),
+      p("d23p4", "Find Median from Data Stream", "Hard", ["Amazon", "Google"], null, null, "Pro"),
       p("d23p5", "Merge K Sorted Lists", "Hard", ["Amazon", "Microsoft"]),
       p("d23p6", "Task Scheduler", "Medium", ["Amazon", "Microsoft"]),
     ],
@@ -302,9 +303,9 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d24p1", "Implement Trie", "Medium", ["Amazon", "Google"]),
       p("d24p2", "Add and Search Word", "Medium", ["Amazon"]),
-      p("d24p3", "Word Search II", "Hard", ["Amazon", "Google"], true, "Pro"),
+      p("d24p3", "Word Search II", "Hard", ["Amazon", "Google"], null, null, "Pro"),
       p("d24p4", "Longest Word in Dictionary", "Medium", ["Amazon"]),
-      p("d24p5", "Maximum XOR of Two Numbers", "Medium", ["Amazon"], true, "Pro"),
+      p("d24p5", "Maximum XOR of Two Numbers", "Medium", ["Amazon"], null, null, "Pro"),
     ],
   },
   {
@@ -334,8 +335,8 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d27p1", "Number of Connected Components", "Medium", ["LinkedIn", "Amazon"]),
       p("d27p2", "Redundant Connection", "Medium", ["Amazon"]),
-      p("d27p3", "Dijkstra's Algorithm", "Medium", ["Amazon", "Google"], true, "Pro"),
-      p("d27p4", "Bellman-Ford Algorithm", "Medium", ["Amazon"], true, "Pro"),
+      p("d27p3", "Dijkstra's Algorithm", "Medium", ["Amazon", "Google"], null, null, "Pro"),
+      p("d27p4", "Bellman-Ford Algorithm", "Medium", ["Amazon"], null, null, "Pro"),
       p("d27p5", "Prim's MST Algorithm", "Medium", ["Amazon", "Flipkart"]),
       p("d27p6", "Kruskal's MST Algorithm", "Medium", ["Amazon"]),
       p("d27p7", "Cheapest Flights Within K Stops", "Medium", ["Google", "Lyft"]),
@@ -346,8 +347,8 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d28p1", "Word Ladder", "Hard", ["Amazon", "Google"]),
       p("d28p2", "Word Ladder II", "Hard", ["Amazon", "Google"]),
-      p("d28p3", "Alien Dictionary", "Hard", ["Google", "Amazon"], true, "Pro"),
-      p("d28p4", "Critical Connections in Network", "Hard", ["Amazon"], true, "Pro"),
+      p("d28p3", "Alien Dictionary", "Hard", ["Google", "Amazon"], null, null, "Pro"),
+      p("d28p4", "Critical Connections in Network", "Hard", ["Amazon"], null, null, "Pro"),
       p("d28p5", "Pacific Atlantic Water Flow", "Medium", ["Salesforce", "Google"]),
       p("d28p6", "Strongly Connected Components (Kosaraju)", "Hard", ["Amazon", "Google"]),
       p("d28p7", "Bipartite Graph Check", "Medium", ["Amazon"]),
@@ -366,10 +367,10 @@ const DSA_SHEET: DaySheet[] = [
   {
     day: 30, title: "Day 30 : DP (Part 2)",
     problems: [
-      p("d30p1", "0-1 Knapsack Problem", "Medium", ["Amazon", "Google"], true, "Pro"),
+      p("d30p1", "0-1 Knapsack Problem", "Medium", ["Amazon", "Google"], null, null, "Pro"),
       p("d30p2", "Coin Change Problem", "Medium", ["Amazon", "Apple"]),
       p("d30p3", "Longest Common Subsequence", "Medium", ["Amazon", "Google"]),
-      p("d30p4", "Edit Distance", "Hard", ["Amazon", "Google"], true, "Pro"),
+      p("d30p4", "Edit Distance", "Hard", ["Amazon", "Google"], null, null, "Pro"),
       p("d30p5", "Minimum Path Sum", "Medium", ["Amazon"]),
       p("d30p6", "Unique Paths", "Medium", ["Amazon", "Google"]),
     ],
@@ -377,9 +378,9 @@ const DSA_SHEET: DaySheet[] = [
   {
     day: 31, title: "Day 31 : DP (Part 3)",
     problems: [
-      p("d31p1", "Longest Increasing Subsequence", "Medium", ["Amazon", "Microsoft"], true, "Pro"),
+      p("d31p1", "Longest Increasing Subsequence", "Medium", ["Amazon", "Microsoft"], null, null, "Pro"),
       p("d31p2", "Russian Doll Envelopes", "Hard", ["Amazon", "Google"]),
-      p("d31p3", "Burst Balloons (MCM)", "Hard", ["Google"], true, "Pro"),
+      p("d31p3", "Burst Balloons (MCM)", "Hard", ["Google"], null, null, "Pro"),
       p("d31p4", "Palindrome Partitioning II", "Hard", ["Amazon"]),
       p("d31p5", "Egg Drop Problem", "Hard", ["Google", "Amazon"]),
     ],
@@ -389,7 +390,7 @@ const DSA_SHEET: DaySheet[] = [
     problems: [
       p("d32p1", "Best Time to Buy and Sell Stock III", "Hard", ["Amazon", "Google"]),
       p("d32p2", "Best Time to Buy and Sell Stock IV", "Hard", ["Amazon"]),
-      p("d32p3", "Regular Expression Matching", "Hard", ["Google", "Meta"], true, "Pro"),
+      p("d32p3", "Regular Expression Matching", "Hard", ["Google", "Meta"], null, null, "Pro"),
       p("d32p4", "Wildcard Matching", "Hard", ["Amazon", "Meta"]),
       p("d32p5", "Interleaving String", "Hard", ["Google", "Amazon"]),
     ],
@@ -513,22 +514,31 @@ const DP_SHEET: DPSection[] = [
 
 /* ─────────────── DOWNLOADABLE NOTES ─────────────── */
 const NOTE_CATEGORIES = [
-  { title: "CS Fundamentals", description: "Complete Notes of CS Fundamentals", files: 4, icon: "🖥️", color: "#4f46e5" },
-  { title: "Python", description: "Detailed Notes of Python", files: 8, icon: "🐍", color: "#3b82f6" },
-  { title: "Java", description: "Java Notes", files: 1, icon: "☕", color: "#ef4444" },
-  { title: "HTML", description: "HTML Notes", files: 1, icon: "🌐", color: "#f97316" },
-  { title: "JavaScript", description: "JavaScript Notes", files: 9, icon: "⚡", color: "#eab308" },
-  { title: "Github Cheatsheet", description: "Github Cheatsheet", files: 1, icon: "🐙", color: "#6b7280" },
-  { title: "SQL", description: "SQL Notes", files: 1, icon: "🗄️", color: "#06b6d4" },
-  { title: "Web Development Roadmap", description: "Complete Roadmap for Web Development", files: 1, icon: "🗺️", color: "#10b981" },
-  { title: "Python Crash Course", description: "Complete crash course for learning Python from scratch.", files: 1, icon: "🚀", color: "#8b5cf6" },
+  { title: "CS Fundamentals", description: "Complete Notes of CS Fundamentals", files: 4, icon: "🖥️", color: "#4f46e5",
+    viewUrl: "https://drive.google.com/drive/folders/1FnJAa7pP3ovBmM09q7HiQGRGPGPE8kYP" },
+  { title: "Python", description: "Detailed Notes of Python", files: 8, icon: "🐍", color: "#3b82f6",
+    viewUrl: "https://docs.python.org/3/tutorial/" },
+  { title: "Java", description: "Java Notes", files: 1, icon: "☕", color: "#ef4444",
+    viewUrl: "https://dev.java/learn/" },
+  { title: "HTML", description: "HTML Notes", files: 1, icon: "🌐", color: "#f97316",
+    viewUrl: "https://developer.mozilla.org/en-US/docs/Web/HTML" },
+  { title: "JavaScript", description: "JavaScript Notes", files: 9, icon: "⚡", color: "#eab308",
+    viewUrl: "https://javascript.info/" },
+  { title: "Github Cheatsheet", description: "Github Cheatsheet", files: 1, icon: "🐙", color: "#6b7280",
+    viewUrl: "https://education.github.com/git-cheat-sheet-education.pdf" },
+  { title: "SQL", description: "SQL Notes", files: 1, icon: "🗄️", color: "#06b6d4",
+    viewUrl: "https://www.sqltutorial.org/sql-cheat-sheet/" },
+  { title: "Web Development Roadmap", description: "Complete Roadmap for Web Development", files: 1, icon: "🗺️", color: "#10b981",
+    viewUrl: "https://roadmap.sh/frontend" },
+  { title: "Python Crash Course", description: "Complete crash course for learning Python from scratch.", files: 1, icon: "🚀", color: "#8b5cf6",
+    viewUrl: "https://ehmatthes.github.io/pcc_3e/cheat_sheets/" },
 ];
 
 const CS_FUNDAMENTALS_FILES = [
-  { name: "Computer Networks", desc: "Complete Notes of Computer Networks" },
-  { name: "DBMS", desc: "Complete Notes of DBMS" },
-  { name: "Object Oriented Programming", desc: "Complete Notes of OOPs" },
-  { name: "Operating System", desc: "Complete Notes of Operating System" },
+  { name: "Computer Networks", desc: "Complete Notes of Computer Networks", downloadUrl: "https://www.cs.umd.edu/~meesh/cmsc417/current/handouts/ComputerNetworks.pdf", viewUrl: "https://www.geeksforgeeks.org/computer-network-tutorials/" },
+  { name: "DBMS", desc: "Complete Notes of DBMS", downloadUrl: "https://www.geeksforgeeks.org/dbms-notes/", viewUrl: "https://www.geeksforgeeks.org/introduction-of-dbms-database-management-system-set-1/" },
+  { name: "Object Oriented Programming", desc: "Complete Notes of OOPs", downloadUrl: "https://www.geeksforgeeks.org/oops-object-oriented-design/", viewUrl: "https://www.geeksforgeeks.org/object-oriented-programming-oops-concept-in-java/" },
+  { name: "Operating System", desc: "Complete Notes of Operating System", downloadUrl: "https://www.os-book.com/OS10/slide-dir/index.html", viewUrl: "https://www.geeksforgeeks.org/operating-systems/" },
 ];
 
 /* ─────────────── COMPONENT ─────────────── */
@@ -589,26 +599,33 @@ export default function DSASheetPage() {
         </td>
         {/* Article */}
         <td style={{ padding: "12px 14px", textAlign: "center" }}>
-          {pr.hasArticle ? (
-            <a href={`https://takeuforward.org/`} target="_blank" rel="noreferrer"
+          {pr.articleUrl ? (
+            <a href={pr.articleUrl} target="_blank" rel="noreferrer"
+              title="Read article on TakeUForward"
               style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "50%", background: "#1e1e1e", border: "1px solid #333", color: "#9ca3af", fontSize: "11px", fontWeight: "700", textDecoration: "none" }}>
               M≡
             </a>
           ) : (
-            <span style={{ fontSize: "10px", color: "#4b5563" }}>Coming<br />Soon</span>
+            <span style={{ fontSize: "10px", color: "#4b5563", lineHeight: "1.2" }}>Coming<br />Soon</span>
           )}
         </td>
         {/* Youtube */}
         <td style={{ padding: "12px 14px", textAlign: "center" }}>
-          <a href="https://www.youtube.com/@ApnaCollegeOfficial" target="_blank" rel="noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "50%", background: "#1e1e1e", border: "1px solid #333", color: "#ef4444", fontSize: "13px", textDecoration: "none" }}>
-            ▶
-          </a>
+          {pr.youtubeUrl ? (
+            <a href={pr.youtubeUrl} target="_blank" rel="noreferrer"
+              title="Watch video solution"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "50%", background: "#1e1e1e", border: "1px solid #333", color: "#ef4444", fontSize: "13px", textDecoration: "none" }}>
+              ▶
+            </a>
+          ) : (
+            <span style={{ fontSize: "10px", color: "#4b5563", lineHeight: "1.2" }}>Coming<br />Soon</span>
+          )}
         </td>
         {/* Practice */}
         <td style={{ padding: "12px 14px", textAlign: "center" }}>
           <Link href={`/problems/${pr.slug}`}
-            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "50%", background: "#1e1e1e", border: "1px solid #333", color: "#9ca3af", fontSize: "11px", fontWeight: "700", textDecoration: "none" }}>
+            title="Practice in Nexvora IDE (Monaco Editor + test cases)"
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "50%", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.3)", color: "#f97316", fontSize: "11px", fontWeight: "700", textDecoration: "none" }}>
             {"</>"}
           </Link>
         </td>
@@ -903,23 +920,34 @@ export default function DSASheetPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                 {NOTE_CATEGORIES.map((cat) => (
-                  <button
+                  <div
                     key={cat.title}
-                    onClick={() => setSelectedNoteCategory(cat.title)}
                     style={{ padding: "0", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)", background: "#111113", cursor: "pointer", textAlign: "left", overflow: "hidden" }}
                   >
-                    <div style={{ height: "120px", background: `linear-gradient(135deg, ${cat.color}22, ${cat.color}11)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px" }}>
-                      {cat.icon}
-                    </div>
-                    <div style={{ padding: "14px 16px" }}>
-                      <div style={{ fontSize: "15px", fontWeight: "800", color: "#e5e7eb", marginBottom: "4px" }}>{cat.title}</div>
-                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "10px" }}>{cat.description}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "12px", color: "#6b7280" }}>{cat.files} {cat.files === 1 ? "File" : "Files"}</span>
-                        <span style={{ fontSize: "12px", color: "#f97316", fontWeight: "700" }}>View Files →</span>
+                    <button
+                      onClick={() => setSelectedNoteCategory(cat.title)}
+                      style={{ width: "100%", background: "transparent", border: "none", padding: "0", cursor: "pointer", textAlign: "left" }}
+                    >
+                      <div style={{ height: "120px", background: `linear-gradient(135deg, ${cat.color}22, ${cat.color}11)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px" }}>
+                        {cat.icon}
                       </div>
-                    </div>
-                  </button>
+                      <div style={{ padding: "14px 16px" }}>
+                        <div style={{ fontSize: "15px", fontWeight: "800", color: "#e5e7eb", marginBottom: "4px" }}>{cat.title}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "10px" }}>{cat.description}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "12px", color: "#6b7280" }}>{cat.files} {cat.files === 1 ? "File" : "Files"}</span>
+                          <a
+                            href={cat.viewUrl}
+                            target="_blank" rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ fontSize: "12px", color: "#f97316", fontWeight: "700", textDecoration: "none" }}
+                          >
+                            View Files →
+                          </a>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -944,7 +972,14 @@ export default function DSASheetPage() {
                 <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#6b7280", cursor: "pointer" }}>
                   <input type="checkbox" style={{ accentColor: "#f97316" }} /> Select All
                 </label>
-                <button className="btn-primary btn-sm">📥 Download Selected</button>
+                <a
+                  href={NOTE_CATEGORIES.find(c => c.title === selectedNoteCategory)?.viewUrl || "#"}
+                  target="_blank" rel="noreferrer"
+                  className="btn-primary btn-sm"
+                  style={{ textDecoration: "none" }}
+                >
+                  📥 Download / View All
+                </a>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -958,8 +993,13 @@ export default function DSASheetPage() {
                     </div>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                       <span style={{ padding: "3px 8px", borderRadius: "4px", background: "#1e1e1e", border: "1px solid #333", fontSize: "11px", color: "#9ca3af" }}>pdf</span>
-                      <button title="Open" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "16px" }}>↗</button>
-                      <button title="Download" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "16px" }}>⬇</button>
+                      <a href={file.viewUrl} target="_blank" rel="noreferrer"
+                        title="View online"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: "16px", textDecoration: "none" }}>↗</a>
+                      <a href={file.downloadUrl} target="_blank" rel="noreferrer"
+                        download
+                        title="Download PDF"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#f97316", fontSize: "16px", textDecoration: "none" }}>⬇</a>
                     </div>
                   </div>
                 ))}

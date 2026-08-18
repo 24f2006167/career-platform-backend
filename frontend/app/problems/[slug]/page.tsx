@@ -9,6 +9,135 @@ import { use } from "react";
 // Monaco editor — loaded client-side only
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
+// ── Determine base API URL (works on localhost and Vercel) ──
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "" // relative URLs on Vercel (rewrites handle proxy)
+    : "http://127.0.0.1:8000";
+
+// ── Local problem database for DSA sheet problems (frontend fallback) ──
+const LOCAL_PROBLEMS: Record<string, object> = {
+  "majority-element": {
+    id: "local-1", title: "Majority Element", slug: "majority-element", difficulty: "easy",
+    topic_tags: ["Array", "Hash Map", "Boyer-Moore Voting"], company_tags: ["Amazon", "Google", "Microsoft"],
+    description: `Given an array nums of size n, find the majority element. The majority element is the element that appears more than ⌊n/2⌋ times. You may assume the majority element always exists in the array.\n\n**Approach**: Use Boyer-Moore Voting Algorithm — O(n) time, O(1) space.\n\n**Example 1:**\n\`\`\`\nInput: nums = [3,2,3]\nOutput: 3\n\`\`\`\n**Example 2:**\n\`\`\`\nInput: nums = [2,2,1,1,1,2,2]\nOutput: 2\n\`\`\``,
+    constraints: "n == nums.length\n1 <= n <= 5 * 10^4\n-10^9 <= nums[i] <= 10^9",
+    examples: [
+      { input: "[3,2,3]", output: "3", explanation: "3 appears 2 times out of 3" },
+      { input: "[2,2,1,1,1,2,2]", output: "2", explanation: "2 appears 4 times out of 7" },
+    ],
+    hints: ["Use Boyer-Moore Voting Algorithm", "Maintain a candidate and count", "If count == 0, replace candidate"],
+    points: 100, acceptance_rate: 64.3, total_submissions: 12400, is_solved: false,
+    public_test_cases: [
+      { input: "[3,2,3]", expected_output: "3" },
+      { input: "[2,2,1,1,1,2,2]", expected_output: "2" },
+      { input: "[1]", expected_output: "1" },
+    ],
+  },
+  "single-number": {
+    id: "local-2", title: "Single Number", slug: "single-number", difficulty: "easy",
+    topic_tags: ["Array", "Bit Manipulation", "XOR"], company_tags: ["Apple", "Amazon", "Meta"],
+    description: `Given a non-empty array of integers, every element appears twice except for one. Find that single one.\n\n**Key Insight**: XOR of a number with itself is 0, XOR of a number with 0 is the number itself. XOR all elements → result is the single number.\n\n**Example 1:**\n\`\`\`\nInput: [2,2,1]\nOutput: 1\n\`\`\`\n**Example 2:**\n\`\`\`\nInput: [4,1,2,1,2]\nOutput: 4\n\`\`\``,
+    constraints: "1 <= nums.length <= 3 * 10^4\nnums[i] is non-zero\nEvery element appears twice except for one",
+    examples: [
+      { input: "[2,2,1]", output: "1" },
+      { input: "[4,1,2,1,2]", output: "4" },
+    ],
+    hints: ["Think about bit manipulation", "a XOR a = 0", "a XOR 0 = a"],
+    points: 100, acceptance_rate: 70.5, total_submissions: 8900, is_solved: false,
+    public_test_cases: [
+      { input: "[2,2,1]", expected_output: "1" },
+      { input: "[4,1,2,1,2]", expected_output: "4" },
+      { input: "[1]", expected_output: "1" },
+    ],
+  },
+  "kadane-s-algorithm": {
+    id: "local-3", title: "Kadane's Algorithm", slug: "kadane-s-algorithm", difficulty: "medium",
+    topic_tags: ["Array", "Dynamic Programming"], company_tags: ["Amazon", "Google", "Microsoft", "LinkedIn"],
+    description: `Given an integer array nums, find the subarray with the largest sum, and return its sum.\n\n**Kadane's Algorithm**: Track current sum and max sum. Reset current sum to 0 when it goes negative.\n\n**Example 1:**\n\`\`\`\nInput: [-2,1,-3,4,-1,2,1,-5,4]\nOutput: 6\nExplanation: [4,-1,2,1] has the largest sum = 6\n\`\`\``,
+    constraints: "1 <= nums.length <= 10^5\n-10^4 <= nums[i] <= 10^4",
+    examples: [
+      { input: "[-2,1,-3,4,-1,2,1,-5,4]", output: "6", explanation: "Subarray [4,-1,2,1] = 6" },
+      { input: "[1]", output: "1" },
+    ],
+    hints: ["If current sum becomes negative, reset to 0", "Track global maximum at each step", "Edge case: all negative numbers"],
+    points: 150, acceptance_rate: 50.2, total_submissions: 15600, is_solved: false,
+    public_test_cases: [
+      { input: "[-2,1,-3,4,-1,2,1,-5,4]", expected_output: "6" },
+      { input: "[1]", expected_output: "1" },
+      { input: "[-1]", expected_output: "-1" },
+    ],
+  },
+  "two-sum": {
+    id: "local-4", title: "Two Sum", slug: "two-sum", difficulty: "easy",
+    topic_tags: ["Array", "Hash Map"], company_tags: ["Google", "Amazon", "Meta"],
+    description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\n**Approach**: Use a hash map to store complement → index mappings as you iterate.\n\n**Example:**\n\`\`\`\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: nums[0] + nums[1] = 2 + 7 = 9\n\`\`\``,
+    constraints: "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\nOnly one valid answer exists",
+    examples: [
+      { input: "nums=[2,7,11,15], target=9", output: "[0,1]" },
+      { input: "nums=[3,2,4], target=6", output: "[1,2]" },
+    ],
+    hints: ["Use a hash map to store seen values", "For each element, check if its complement exists", "Return indices immediately when found"],
+    points: 100, acceptance_rate: 52.1, total_submissions: 25000, is_solved: false,
+    public_test_cases: [
+      { input: "2 7 11 15\n9", expected_output: "0 1" },
+      { input: "3 2 4\n6", expected_output: "1 2" },
+    ],
+  },
+  "valid-parentheses": {
+    id: "local-5", title: "Valid Parentheses", slug: "valid-parentheses", difficulty: "easy",
+    topic_tags: ["Stack", "String"], company_tags: ["Amazon", "Google", "Microsoft"],
+    description: `Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.\n\n**Valid Rules**: Open brackets must be closed by the same type, and in the correct order.\n\n**Example 1:**\n\`\`\`\nInput: s = "()"\nOutput: true\n\`\`\`\n**Example 2:**\n\`\`\`\nInput: s = "([)]"\nOutput: false\n\`\`\``,
+    constraints: "1 <= s.length <= 10^4\ns consists of parentheses only '()[]{}'.",
+    examples: [
+      { input: "()", output: "true" },
+      { input: "()[]{}", output: "true" },
+      { input: "([)]", output: "false" },
+    ],
+    hints: ["Use a stack", "Push opening brackets, pop when you see closing", "If stack is empty at end, it's valid"],
+    points: 100, acceptance_rate: 40.1, total_submissions: 18700, is_solved: false,
+    public_test_cases: [
+      { input: "()", expected_output: "true" },
+      { input: "()[]{}", expected_output: "true" },
+      { input: "([)]", expected_output: "false" },
+      { input: "{", expected_output: "false" },
+    ],
+  },
+  "binary-search": {
+    id: "local-6", title: "Binary Search", slug: "binary-search", difficulty: "easy",
+    topic_tags: ["Binary Search", "Array"], company_tags: ["Google", "Amazon", "Meta"],
+    description: `Given an array of integers nums which is sorted in ascending order, and an integer target, return the index of target. If not found, return -1.\n\n**Algorithm**: Compare target with middle element. If equal → found. If less → search left half. If greater → search right half.\n\n**Example:**\n\`\`\`\nInput: nums = [-1,0,3,5,9,12], target = 9\nOutput: 4\n\`\`\``,
+    constraints: "1 <= nums.length <= 10^4\nnums is sorted in ascending order\n-10^4 <= target <= 10^4",
+    examples: [
+      { input: "[-1,0,3,5,9,12], target=9", output: "4" },
+      { input: "[-1,0,3,5,9,12], target=2", output: "-1" },
+    ],
+    hints: ["Maintain lo and hi pointers", "Calculate mid = (lo + hi) // 2", "Adjust lo or hi based on comparison"],
+    points: 100, acceptance_rate: 56.8, total_submissions: 14200, is_solved: false,
+    public_test_cases: [
+      { input: "-1 0 3 5 9 12\n9", expected_output: "4" },
+      { input: "-1 0 3 5 9 12\n2", expected_output: "-1" },
+    ],
+  },
+  "reverse-linked-list": {
+    id: "local-7", title: "Reverse Linked List", slug: "reverse-linked-list", difficulty: "easy",
+    topic_tags: ["Linked List", "Recursion"], company_tags: ["Amazon", "Apple", "Google"],
+    description: `Given the head of a singly linked list, reverse the list, and return the reversed list.\n\n**Iterative Approach**: Use three pointers: prev, curr, next. Iterate and reverse links.\n\n**Example:**\n\`\`\`\nInput: 1 -> 2 -> 3 -> 4 -> 5\nOutput: 5 -> 4 -> 3 -> 2 -> 1\n\`\`\``,
+    constraints: "0 <= number of nodes <= 5000\n-5000 <= Node.val <= 5000",
+    examples: [
+      { input: "1 2 3 4 5", output: "5 4 3 2 1" },
+      { input: "1 2", output: "2 1" },
+    ],
+    hints: ["Use prev and curr pointers", "Save next before overwriting curr.next", "Move prev to curr, curr to saved next"],
+    points: 100, acceptance_rate: 74.1, total_submissions: 11000, is_solved: false,
+    public_test_cases: [
+      { input: "1 2 3 4 5", expected_output: "5 4 3 2 1" },
+      { input: "1 2", expected_output: "2 1" },
+      { input: "", expected_output: "" },
+    ],
+  },
+};
+
 interface TestCase {
   input: string;
   expected_output: string;
@@ -170,7 +299,14 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     setResultStatus(null);
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/problems/${slug}`, {
+      // Try local database first for DSA sheet problems
+      const localProblem = LOCAL_PROBLEMS[slug] as Problem | undefined;
+      if (localProblem) {
+        setProblem(localProblem);
+        setLoading(false);
+        return;
+      }
+      const res = await fetch(`${API_BASE}/api/v1/problems/${slug}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
@@ -188,7 +324,7 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("access_token");
       if (!token) return;
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/submissions?problem_slug=${slug}`, {
+      const res = await fetch(`${API_BASE}/api/v1/submissions?problem_slug=${slug}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -239,7 +375,7 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
     }
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/submissions/${submissionId}`, {
+      const res = await fetch(`${API_BASE}/api/v1/submissions/${submissionId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
@@ -275,7 +411,7 @@ export default function ProblemDetailPage({ params }: { params: Promise<{ slug: 
         return;
       }
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/submissions", {
+      const res = await fetch(`${API_BASE}/api/v1/submissions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
