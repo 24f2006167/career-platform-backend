@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Link from "next/link";
+import API from "@/lib/api";
 
 interface RoadmapStep {
   id: number;
@@ -16,63 +17,73 @@ interface RoadmapStep {
   isWeakness?: boolean;
 }
 
-const ROADMAP_DATA: Record<string, RoadmapStep[]> = {
+interface UserProfile {
+  full_name: string;
+  username: string;
+  problems_solved: number;
+  easy_solved: number;
+  medium_solved: number;
+  hard_solved: number;
+  readiness_score: number;
+}
+
+const BASE_ROADMAP_TEMPLATES: Record<string, Omit<RoadmapStep, "proficiency" | "status">[]> = {
   "Software Engineer": [
-    { id: 1, title: "Programming Fundamentals & OOP", icon: "🐍", skills: ["Python / C++ / Java", "Data Types & Control Flow", "OOP Principles & Design", "Recursion & Memory"], proficiency: 85, problems: 45, status: "completed", category: "foundation" },
-    { id: 2, title: "Data Structures & Algorithms", icon: "🌳", skills: ["Arrays, Strings & HashMaps", "Linked Lists & Stacks", "Trees, Tries & Heaps", "Dynamic Programming & Graphs", "Sorting & Binary Search"], proficiency: 68, problems: 94, status: "in-progress", category: "dsa" },
-    { id: 3, title: "Database Management & SQL", icon: "🗄️", skills: ["SQL Queries & Joins", "Normalization & Indexing", "Transactions & ACID", "PostgreSQL & Redis"], proficiency: 72, problems: 26, status: "in-progress", category: "dbms" },
-    { id: 4, title: "Operating Systems & Concurrency", icon: "⚙️", skills: ["Processes & Threads", "Memory Management & Paging", "CPU Scheduling & Deadlocks", "Concurrency & Semaphores"], proficiency: 54, problems: 18, status: "in-progress", category: "os", isWeakness: true },
-    { id: 5, title: "Computer Networks", icon: "🌐", skills: ["OSI & TCP/IP Model", "HTTP/HTTPS & REST", "DNS, Sockets & WebSockets", "Load Balancers & Reverse Proxy"], proficiency: 42, problems: 14, status: "weak", category: "networks", isWeakness: true },
-    { id: 6, title: "System Design & Architecture", icon: "🏗️", skills: ["Scalability & High Availability", "Microservices & API Gateway", "Caching (Redis/Memcached)", "Message Queues (Kafka/RabbitMQ)", "Database Sharding"], proficiency: 38, problems: 12, status: "weak", category: "system_design", isWeakness: true },
-    { id: 7, title: "Backend Development", icon: "🚀", skills: ["RESTful API Architecture", "FastAPI / Node.js / Spring", "JWT & OAuth2 Auth", "Docker Containers", "CI/CD Pipelines"], proficiency: 67, problems: 34, status: "in-progress", category: "backend" },
-    { id: 8, title: "Technical Interview & Mock Prep", icon: "🎤", skills: ["Live Coding & Problem Decomposition", "STAR Method Behavioral", "System Design Rounds", "Resume Optimization"], proficiency: 45, problems: 15, status: "not-started", category: "interview" },
+    { id: 1, title: "Programming Fundamentals & OOP", icon: "🐍", skills: ["Python / C++ / Java", "Data Types & Control Flow", "OOP Principles & Design", "Recursion & Memory"], problems: 45, category: "foundation" },
+    { id: 2, title: "Data Structures & Algorithms", icon: "🌳", skills: ["Arrays, Strings & HashMaps", "Linked Lists & Stacks", "Trees, Tries & Heaps", "Dynamic Programming & Graphs", "Sorting & Binary Search"], problems: 94, category: "dsa" },
+    { id: 3, title: "Database Management & SQL", icon: "🗄️", skills: ["SQL Queries & Joins", "Normalization & Indexing", "Transactions & ACID", "PostgreSQL & Redis"], problems: 26, category: "dbms" },
+    { id: 4, title: "Operating Systems & Concurrency", icon: "⚙️", skills: ["Processes & Threads", "Memory Management & Paging", "CPU Scheduling & Deadlocks", "Concurrency & Semaphores"], problems: 18, category: "os" },
+    { id: 5, title: "Computer Networks", icon: "🌐", skills: ["OSI & TCP/IP Model", "HTTP/HTTPS & REST", "DNS, Sockets & WebSockets", "Load Balancers & Reverse Proxy"], problems: 14, category: "networks" },
+    { id: 6, title: "System Design & Architecture", icon: "🏗️", skills: ["Scalability & High Availability", "Microservices & API Gateway", "Caching (Redis/Memcached)", "Message Queues (Kafka/RabbitMQ)", "Database Sharding"], problems: 12, category: "system_design" },
+    { id: 7, title: "Backend Development", icon: "🚀", skills: ["RESTful API Architecture", "FastAPI / Node.js / Spring", "JWT & OAuth2 Auth", "Docker Containers", "CI/CD Pipelines"], problems: 34, category: "backend" },
+    { id: 8, title: "Technical Interview & Mock Prep", icon: "🎤", skills: ["Live Coding & Problem Decomposition", "STAR Method Behavioral", "System Design Rounds", "Resume Optimization"], problems: 15, category: "interview" },
   ],
 
   "Backend Engineer": [
-    { id: 101, title: "Core Language Mastery (Python/Go/Java)", icon: "⚡", skills: ["Advanced Python / Go / Java", "Concurrency & Async I/O", "Memory Management & Profiling", "Clean Architecture & SOLID"], proficiency: 80, problems: 40, status: "completed", category: "lang" },
-    { id: 102, title: "API Development & Web Frameworks", icon: "🔌", skills: ["FastAPI / Express / Spring Boot", "RESTful Design Principles", "GraphQL & gRPC APIs", "Request Validation & OpenAPI"], proficiency: 75, problems: 32, status: "in-progress", category: "api" },
-    { id: 103, title: "Databases (SQL & NoSQL)", icon: "🗄️", skills: ["PostgreSQL Schema Design", "Query Optimization & EXPLAIN", "Redis In-Memory Caching", "MongoDB / Cassandra NoSQL", "Transactions & Isolation Levels"], proficiency: 68, problems: 28, status: "in-progress", category: "database" },
-    { id: 104, title: "Authentication, Security & Rate Limiting", icon: "🔐", skills: ["JWT, OAuth 2.0 & SSO", "Token Rotation & Refresh", "Password Hashing (bcrypt/argon2)", "Rate Limiting & CORS", "SQL Injection & XSS Defense"], proficiency: 70, problems: 20, status: "in-progress", category: "security" },
-    { id: 105, title: "Distributed Systems & Message Queues", icon: "📡", skills: ["Apache Kafka & Event Streams", "RabbitMQ / Celery Async Tasks", "Idempotency & Retry Mechanisms", "CAP Theorem & Distributed Locks"], proficiency: 40, problems: 12, status: "weak", category: "distributed", isWeakness: true },
-    { id: 106, title: "Cloud & DevOps for Backend", icon: "☁️", skills: ["Docker Containerization", "Kubernetes Pods & Deployments", "AWS / GCP Cloud Services", "GitHub Actions CI/CD", "Prometheus & Grafana Monitoring"], proficiency: 50, problems: 16, status: "in-progress", category: "devops" },
-    { id: 107, title: "High-Scale System Design", icon: "🏗️", skills: ["Horizontal vs Vertical Scaling", "Consistent Hashing & Partitioning", "CDN & Global Edge Caching", "Disaster Recovery & Backup"], proficiency: 35, problems: 10, status: "weak", category: "system_design", isWeakness: true },
+    { id: 101, title: "Core Language Mastery (Python/Go/Java)", icon: "⚡", skills: ["Advanced Python / Go / Java", "Concurrency & Async I/O", "Memory Management & Profiling", "Clean Architecture & SOLID"], problems: 40, category: "lang" },
+    { id: 102, title: "API Development & Web Frameworks", icon: "🔌", skills: ["FastAPI / Express / Spring Boot", "RESTful Design Principles", "GraphQL & gRPC APIs", "Request Validation & OpenAPI"], problems: 32, category: "api" },
+    { id: 103, title: "Databases (SQL & NoSQL)", icon: "🗄️", skills: ["PostgreSQL Schema Design", "Query Optimization & EXPLAIN", "Redis In-Memory Caching", "MongoDB / Cassandra NoSQL", "Transactions & Isolation Levels"], problems: 28, category: "database" },
+    { id: 104, title: "Authentication, Security & Rate Limiting", icon: "🔐", skills: ["JWT, OAuth 2.0 & SSO", "Token Rotation & Refresh", "Password Hashing (bcrypt/argon2)", "Rate Limiting & CORS", "SQL Injection & XSS Defense"], problems: 20, category: "security" },
+    { id: 105, title: "Distributed Systems & Message Queues", icon: "📡", skills: ["Apache Kafka & Event Streams", "RabbitMQ / Celery Async Tasks", "Idempotency & Retry Mechanisms", "CAP Theorem & Distributed Locks"], problems: 12, category: "distributed" },
+    { id: 106, title: "Cloud & DevOps for Backend", icon: "☁️", skills: ["Docker Containerization", "Kubernetes Pods & Deployments", "AWS / GCP Cloud Services", "GitHub Actions CI/CD", "Prometheus & Grafana Monitoring"], problems: 16, category: "devops" },
+    { id: 107, title: "High-Scale System Design", icon: "🏗️", skills: ["Horizontal vs Vertical Scaling", "Consistent Hashing & Partitioning", "CDN & Global Edge Caching", "Disaster Recovery & Backup"], problems: 10, category: "system_design" },
   ],
 
   "Frontend Engineer": [
-    { id: 201, title: "Modern HTML5, CSS3 & Responsive UI", icon: "🎨", skills: ["Semantic HTML5 & Accessibility (a11y)", "Flexbox, CSS Grid & Positioning", "CSS Custom Properties & Theming", "Responsive Design & Mobile-First"], proficiency: 90, problems: 35, status: "completed", category: "ui" },
-    { id: 202, title: "JavaScript Deep Dive (ES6+)", icon: "⚡", skills: ["Closures, Prototypes & 'this'", "Async/Await, Promises & Event Loop", "DOM Manipulation & Events", "Functional Programming Patterns"], proficiency: 82, problems: 48, status: "completed", category: "js" },
-    { id: 203, title: "TypeScript Mastery", icon: "📘", skills: ["Static Types, Generics & Unions", "Interfaces & Type Assertions", "Utility Types (Partial, Pick, Omit)", "Strict Mode & TSConfig"], proficiency: 74, problems: 28, status: "in-progress", category: "ts" },
-    { id: 204, title: "React 19 & Next.js 15 App Router", icon: "⚛️", skills: ["React Hooks (useState, useEffect, useMemo)", "Server vs Client Components", "Next.js Routing & Layouts", "Server Actions & Form Handling"], proficiency: 78, problems: 36, status: "in-progress", category: "react" },
-    { id: 205, title: "State Management & Data Fetching", icon: "🔄", skills: ["Zustand / Redux Toolkit", "React Query / SWR Caching", "Optimistic UI Updates", "WebSocket Realtime Events"], proficiency: 65, problems: 22, status: "in-progress", category: "state" },
-    { id: 206, title: "Performance & Web Vitals", icon: "🚀", skills: ["Core Web Vitals (LCP, FID, CLS)", "Code Splitting & Lazy Loading", "Image Optimization & Next/Image", "Bundle Analysis & Tree Shaking"], proficiency: 48, problems: 14, status: "weak", category: "perf", isWeakness: true },
-    { id: 207, title: "Testing & Frontend Architecture", icon: "🧪", skills: ["Jest & React Testing Library", "Playwright / Cypress E2E", "Microfrontends & Component Libraries", "Storybook & Design Systems"], proficiency: 42, problems: 12, status: "weak", category: "testing", isWeakness: true },
+    { id: 201, title: "Modern HTML5, CSS3 & Responsive UI", icon: "🎨", skills: ["Semantic HTML5 & Accessibility (a11y)", "Flexbox, CSS Grid & Positioning", "CSS Custom Properties & Theming", "Responsive Design & Mobile-First"], problems: 35, category: "ui" },
+    { id: 202, title: "JavaScript Deep Dive (ES6+)", icon: "⚡", skills: ["Closures, Prototypes & 'this'", "Async/Await, Promises & Event Loop", "DOM Manipulation & Events", "Functional Programming Patterns"], problems: 48, category: "js" },
+    { id: 203, title: "TypeScript Mastery", icon: "📘", skills: ["Static Types, Generics & Unions", "Interfaces & Type Assertions", "Utility Types (Partial, Pick, Omit)", "Strict Mode & TSConfig"], problems: 28, category: "ts" },
+    { id: 204, title: "React 19 & Next.js 15 App Router", icon: "⚛️", skills: ["React Hooks (useState, useEffect, useMemo)", "Server vs Client Components", "Next.js Routing & Layouts", "Server Actions & Form Handling"], problems: 36, category: "react" },
+    { id: 205, title: "State Management & Data Fetching", icon: "🔄", skills: ["Zustand / Redux Toolkit", "React Query / SWR Caching", "Optimistic UI Updates", "WebSocket Realtime Events"], problems: 22, category: "state" },
+    { id: 206, title: "Performance & Web Vitals", icon: "🚀", skills: ["Core Web Vitals (LCP, FID, CLS)", "Code Splitting & Lazy Loading", "Image Optimization & Next/Image", "Bundle Analysis & Tree Shaking"], problems: 14, category: "perf" },
+    { id: 207, title: "Testing & Frontend Architecture", icon: "🧪", skills: ["Jest & React Testing Library", "Playwright / Cypress E2E", "Microfrontends & Component Libraries", "Storybook & Design Systems"], problems: 12, category: "testing" },
   ],
 
   "Full Stack Developer": [
-    { id: 301, title: "Frontend Foundation (React + TypeScript)", icon: "💻", skills: ["React 19 Components & Hooks", "TypeScript Strict Typing", "TailwindCSS / Vanilla CSS Tokens", "State Management (Zustand)"], proficiency: 82, problems: 44, status: "completed", category: "frontend" },
-    { id: 302, title: "Backend API Architecture (FastAPI/Node)", icon: "🚀", skills: ["FastAPI & Express Frameworks", "RESTful & GraphQL API Design", "JWT Auth & Session Management", "Request Validation & Error Handling"], proficiency: 76, problems: 38, status: "in-progress", category: "backend" },
-    { id: 303, title: "Database Modeling & ORM", icon: "🗄️", skills: ["PostgreSQL Schema & Migrations", "SQLAlchemy / Prisma ORMs", "Redis Caching & Session Storage", "Indexing & Optimization"], proficiency: 70, problems: 26, status: "in-progress", category: "db" },
-    { id: 304, title: "Full Stack Integration & SSR", icon: "🔄", skills: ["Next.js Fullstack App Router", "Server-Side Rendering (SSR)", "Vercel & Railway Deployment", "CORS, Cookies & HTTPS Proxies"], proficiency: 68, problems: 24, status: "in-progress", category: "integration" },
-    { id: 305, title: "Cloud, Containers & CI/CD", icon: "☁️", skills: ["Docker & Docker Compose", "GitHub Actions Automation", "AWS S3 / Cloud Storage", "Environment Variables & Secrets"], proficiency: 52, problems: 16, status: "in-progress", category: "cloud" },
-    { id: 306, title: "System Design & Microservices", icon: "🏗️", skills: ["Monolith vs Microservices", "Background Job Queues (Celery/Bull)", "Load Balancing & Horizontal Scaling", "Database Replication"], proficiency: 40, problems: 12, status: "weak", category: "sysdesign", isWeakness: true },
+    { id: 301, title: "Frontend Foundation (React + TypeScript)", icon: "💻", skills: ["React 19 Components & Hooks", "TypeScript Strict Typing", "TailwindCSS / Vanilla CSS Tokens", "State Management (Zustand)"], problems: 44, category: "frontend" },
+    { id: 302, title: "Backend API Architecture (FastAPI/Node)", icon: "🚀", skills: ["FastAPI & Express Frameworks", "RESTful & GraphQL API Design", "JWT Auth & Session Management", "Request Validation & Error Handling"], problems: 38, category: "backend" },
+    { id: 303, title: "Database Modeling & ORM", icon: "🗄️", skills: ["PostgreSQL Schema & Migrations", "SQLAlchemy / Prisma ORMs", "Redis Caching & Session Storage", "Indexing & Optimization"], problems: 26, category: "db" },
+    { id: 304, title: "Full Stack Integration & SSR", icon: "🔄", skills: ["Next.js Fullstack App Router", "Server-Side Rendering (SSR)", "Vercel & Railway Deployment", "CORS, Cookies & HTTPS Proxies"], problems: 24, category: "integration" },
+    { id: 305, title: "Cloud, Containers & CI/CD", icon: "☁️", skills: ["Docker & Docker Compose", "GitHub Actions Automation", "AWS S3 / Cloud Storage", "Environment Variables & Secrets"], problems: 16, category: "cloud" },
+    { id: 306, title: "System Design & Microservices", icon: "🏗️", skills: ["Monolith vs Microservices", "Background Job Queues (Celery/Bull)", "Load Balancing & Horizontal Scaling", "Database Replication"], problems: 12, category: "sysdesign" },
   ],
 
   "Data Engineer": [
-    { id: 401, title: "Python for Data & Advanced SQL", icon: "🐍", skills: ["Advanced Python & NumPy/Pandas", "Complex SQL, Window Functions & CTEs", "Data Cleaning & Transformation", "File Formats (Parquet, Avro, ORC)"], proficiency: 84, problems: 42, status: "completed", category: "data_lang" },
-    { id: 402, title: "Data Warehousing & Modeling", icon: "🏢", skills: ["Snowflake / BigQuery / Redshift", "Star Schema & Snowflake Schema", "Slowly Changing Dimensions (SCD)", "Columnar Storage & Partitioning"], proficiency: 72, problems: 28, status: "in-progress", category: "warehouse" },
-    { id: 403, title: "ETL / ELT Pipelines & Orchestration", icon: "⚙️", skills: ["Apache Airflow DAGs & Operators", "dbt (Data Build Tool)", "Prefect / Mage Workflow Tools", "Data Quality & Great Expectations"], proficiency: 65, problems: 24, status: "in-progress", category: "orchestration" },
-    { id: 404, title: "Big Data Processing (PySpark & Hadoop)", icon: "⚡", skills: ["Apache Spark & PySpark RDDs/DataFrames", "Spark Optimization & Memory Tuning", "Distributed Compute Fundamentals", "Delta Lake & Lakehouse"], proficiency: 46, problems: 16, status: "weak", category: "spark", isWeakness: true },
-    { id: 405, title: "Streaming & Real-Time Data (Kafka)", icon: "📡", skills: ["Apache Kafka Producers & Consumers", "Kafka Streams / Spark Streaming", "Schema Registry (Avro)", "Windowing & Watermarking"], proficiency: 38, problems: 12, status: "weak", category: "streaming", isWeakness: true },
-    { id: 406, title: "Cloud Data Architecture (AWS/GCP)", icon: "☁️", skills: ["AWS S3 / GCS Data Lakes", "AWS Glue / GCP Dataflow", "IAM Policies & Data Governance", "Cost Optimization & Monitoring"], proficiency: 50, problems: 14, status: "in-progress", category: "cloud" },
+    { id: 401, title: "Python for Data & Advanced SQL", icon: "🐍", skills: ["Advanced Python & NumPy/Pandas", "Complex SQL, Window Functions & CTEs", "Data Cleaning & Transformation", "File Formats (Parquet, Avro, ORC)"], problems: 42, category: "data_lang" },
+    { id: 402, title: "Data Warehousing & Modeling", icon: "🏢", skills: ["Snowflake / BigQuery / Redshift", "Star Schema & Snowflake Schema", "Slowly Changing Dimensions (SCD)", "Columnar Storage & Partitioning"], problems: 28, category: "warehouse" },
+    { id: 403, title: "ETL / ELT Pipelines & Orchestration", icon: "⚙️", skills: ["Apache Airflow DAGs & Operators", "dbt (Data Build Tool)", "Prefect / Mage Workflow Tools", "Data Quality & Great Expectations"], problems: 24, category: "orchestration" },
+    { id: 404, title: "Big Data Processing (PySpark & Hadoop)", icon: "⚡", skills: ["Apache Spark & PySpark RDDs/DataFrames", "Spark Optimization & Memory Tuning", "Distributed Compute Fundamentals", "Delta Lake & Lakehouse"], problems: 16, category: "spark" },
+    { id: 405, title: "Streaming & Real-Time Data (Kafka)", icon: "📡", skills: ["Apache Kafka Producers & Consumers", "Kafka Streams / Spark Streaming", "Schema Registry (Avro)", "Windowing & Watermarking"], problems: 12, category: "streaming" },
+    { id: 406, title: "Cloud Data Architecture (AWS/GCP)", icon: "☁️", skills: ["AWS S3 / GCS Data Lakes", "AWS Glue / GCP Dataflow", "IAM Policies & Data Governance", "Cost Optimization & Monitoring"], problems: 14, category: "cloud" },
   ],
 
   "DevOps Engineer": [
-    { id: 501, title: "Linux Administration & Bash Scripting", icon: "🐧", skills: ["Linux Kernel & System Calls", "Bash Scripting & Automation", "Networking, iptables & SSH", "Process Management & systemd"], proficiency: 86, problems: 38, status: "completed", category: "linux" },
-    { id: 502, title: "Containers & Container Orchestration", icon: "🐳", skills: ["Dockerfiles & Multi-Stage Builds", "Docker Compose Local Dev", "Kubernetes Pods, Services & Ingress", "Helm Charts & K8s Deployments"], proficiency: 74, problems: 30, status: "in-progress", category: "containers" },
-    { id: 503, title: "Infrastructure as Code (IaC)", icon: "🏗️", skills: ["Terraform Modules & State", "AWS / GCP Cloud Resources", "Ansible Configuration Management", "IaC Security Scanning (tfsec)"], proficiency: 62, problems: 22, status: "in-progress", category: "iac" },
-    { id: 504, title: "CI/CD Pipeline Automation", icon: "🔄", skills: ["GitHub Actions Workflows", "GitLab CI / Jenkins Pipelines", "Automated Testing & Linting", "Zero-Downtime Deployment (Blue/Green)"], proficiency: 68, problems: 26, status: "in-progress", category: "cicd" },
-    { id: 505, title: "Observability, Logging & Monitoring", icon: "📊", skills: ["Prometheus Metrics & Exporters", "Grafana Dashboards & Alerting", "ELK / EFK Stack Centralized Logging", "Distributed Tracing (OpenTelemetry)"], proficiency: 44, problems: 14, status: "weak", category: "monitoring", isWeakness: true },
-    { id: 506, title: "Cloud Security & DevSecOps", icon: "🛡️", skills: ["Secrets Management (HashiCorp Vault)", "Container Vulnerability Scanning (Trivy)", "TLS/SSL Certificate Automation (Let's Encrypt)", "Least Privilege IAM & Compliance"], proficiency: 40, problems: 12, status: "weak", category: "security", isWeakness: true },
+    { id: 501, title: "Linux Administration & Bash Scripting", icon: "🐧", skills: ["Linux Kernel & System Calls", "Bash Scripting & Automation", "Networking, iptables & SSH", "Process Management & systemd"], problems: 38, category: "linux" },
+    { id: 502, title: "Containers & Container Orchestration", icon: "🐳", skills: ["Dockerfiles & Multi-Stage Builds", "Docker Compose Local Dev", "Kubernetes Pods, Services & Ingress", "Helm Charts & K8s Deployments"], problems: 30, category: "containers" },
+    { id: 503, title: "Infrastructure as Code (IaC)", icon: "🏗️", skills: ["Terraform Modules & State", "AWS / GCP Cloud Resources", "Ansible Configuration Management", "IaC Security Scanning (tfsec)"], problems: 22, category: "iac" },
+    { id: 504, title: "CI/CD Pipeline Automation", icon: "🔄", skills: ["GitHub Actions Workflows", "GitLab CI / Jenkins Pipelines", "Automated Testing & Linting", "Zero-Downtime Deployment (Blue/Green)"], problems: 26, category: "cicd" },
+    { id: 505, title: "Observability, Logging & Monitoring", icon: "📊", skills: ["Prometheus Metrics & Exporters", "Grafana Dashboards & Alerting", "ELK / EFK Stack Centralized Logging", "Distributed Tracing (OpenTelemetry)"], problems: 14, category: "monitoring" },
+    { id: 506, title: "Cloud Security & DevSecOps", icon: "🛡️", skills: ["Secrets Management (HashiCorp Vault)", "Container Vulnerability Scanning (Trivy)", "TLS/SSL Certificate Automation (Let's Encrypt)", "Least Privilege IAM & Compliance"], problems: 12, category: "security" },
   ],
 };
 
@@ -85,29 +96,108 @@ const TARGET_ROLES = [
   "DevOps Engineer",
 ];
 
-const DSA_SUBTOPICS = [
-  { name: "Arrays", percent: 95 },
-  { name: "Strings", percent: 82 },
-  { name: "Linked Lists", percent: 71 },
-  { name: "Trees", percent: 58 },
-  { name: "Graphs", percent: 34 },
-  { name: "Dynamic Programming", percent: 22 },
-  { name: "Greedy", percent: 45 },
-  { name: "Binary Search", percent: 68 },
+const DSA_TOPIC_NAMES = [
+  "Arrays",
+  "Strings",
+  "Linked Lists",
+  "Trees",
+  "Graphs",
+  "Dynamic Programming",
+  "Greedy",
+  "Binary Search",
 ];
 
 export default function RoadmapPage() {
   const [selectedRole, setSelectedRole] = useState("Software Engineer");
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const steps = ROADMAP_DATA[selectedRole] || ROADMAP_DATA["Software Engineer"];
+  // Fetch actual user profile & solved problem count
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await API.get("/api/v1/profile/me");
+      if (res.data) {
+        setProfile(res.data);
+      }
+    } catch {
+      // Guest or offline: 0% default
+      setProfile({
+        full_name: "Candidate",
+        username: "candidate",
+        problems_solved: 0,
+        easy_solved: 0,
+        medium_solved: 0,
+        hard_solved: 0,
+        readiness_score: 0,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const solvedCount = profile?.problems_solved || 0;
+  const easyCount = profile?.easy_solved || 0;
+  const medCount = profile?.medium_solved || 0;
+  const hardCount = profile?.hard_solved || 0;
+
+  // Build dynamic steps from actual user stats (starts at 0% for new users)
+  const template = BASE_ROADMAP_TEMPLATES[selectedRole] || BASE_ROADMAP_TEMPLATES["Software Engineer"];
+  const steps: RoadmapStep[] = template.map((step, idx) => {
+    if (solvedCount === 0) {
+      return {
+        ...step,
+        proficiency: 0,
+        status: "not-started" as const,
+        isWeakness: false,
+      };
+    }
+
+    // Dynamic progression as problems are solved
+    let prof = 0;
+    if (idx === 0) {
+      prof = Math.min(100, Math.round((solvedCount / 5) * 100));
+    } else if (idx === 1) {
+      prof = Math.min(100, Math.round(((easyCount * 1.5 + medCount * 2) / 10) * 100));
+    } else if (idx === 2) {
+      prof = Math.min(100, Math.round((easyCount / 4) * 100));
+    } else if (idx === 3) {
+      prof = Math.min(100, Math.round((medCount / 3) * 100));
+    } else if (idx === 4) {
+      prof = Math.min(100, Math.round((hardCount / 2) * 100));
+    } else {
+      prof = Math.min(100, Math.round((solvedCount / 12) * 100));
+    }
+
+    const status: "completed" | "in-progress" | "weak" | "not-started" =
+      prof >= 80 ? "completed" :
+      prof > 0 ? "in-progress" :
+      "not-started";
+
+    return {
+      ...step,
+      proficiency: prof,
+      status,
+      isWeakness: prof > 0 && prof < 40,
+    };
+  });
+
   const totalProficiency = steps.reduce((acc, s) => acc + s.proficiency, 0);
   const overallProgress = steps.length > 0 ? Math.round(totalProficiency / steps.length) : 0;
+
+  // Dynamic DSA subtopics breakdown based on user activity (0% for fresh account)
+  const dsaSubtopics = DSA_TOPIC_NAMES.map((name, i) => {
+    if (solvedCount === 0) return { name, percent: 0 };
+    const factor = (i % 3) + 1;
+    const calc = Math.min(100, Math.round((solvedCount * 12) / factor));
+    return { name, percent: calc };
+  });
 
   const statusStyle: Record<string, { border: string; bg: string; dot: string; label: string }> = {
     completed: { border: "rgba(16,185,129,0.3)", bg: "rgba(16,185,129,0.06)", dot: "#10b981", label: "Completed" },
     "in-progress": { border: "rgba(99,102,241,0.3)", bg: "rgba(99,102,241,0.06)", dot: "#6366f1", label: "In Progress" },
-    weak: { border: "rgba(239,68,68,0.3)", bg: "rgba(239,68,68,0.06)", dot: "#ef4444", label: "Weak Area" },
+    weak: { border: "rgba(239,68,68,0.3)", bg: "rgba(239,68,68,0.06)", dot: "#ef4444", label: "Needs Practice" },
     "not-started": { border: "var(--nex-border)", bg: "transparent", dot: "var(--nex-text-3)", label: "Not Started" },
   };
 
@@ -118,11 +208,13 @@ export default function RoadmapPage() {
         <div className="topbar">
           <h1 style={{ fontSize: "16px", fontWeight: "800" }}>🗺️ Career Learning Roadmap</h1>
           <div style={{ marginLeft: "auto", display: "flex", gap: "10px", alignItems: "center" }}>
-            <span style={{ fontSize: "13px", color: "var(--nex-text-3)" }}>Overall Readiness:</span>
+            <span style={{ fontSize: "13px", color: "var(--nex-text-3)" }}>Your SDE Readiness:</span>
             <div style={{
               padding: "4px 12px", borderRadius: "999px",
-              background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
-              fontSize: "13px", fontWeight: "800", color: "var(--nex-primary)"
+              background: overallProgress > 0 ? "rgba(99,102,241,0.12)" : "var(--nex-surface)",
+              border: `1px solid ${overallProgress > 0 ? "rgba(99,102,241,0.3)" : "var(--nex-border)"}`,
+              fontSize: "13px", fontWeight: "800",
+              color: overallProgress > 0 ? "var(--nex-primary)" : "var(--nex-text-3)"
             }}>
               {overallProgress}%
             </div>
@@ -139,8 +231,8 @@ export default function RoadmapPage() {
                   key={role}
                   onClick={() => {
                     setSelectedRole(role);
-                    const newSteps = ROADMAP_DATA[role] || [];
-                    setExpandedStep(newSteps.length > 0 ? newSteps[0].id : null);
+                    const newTemplate = BASE_ROADMAP_TEMPLATES[role] || [];
+                    setExpandedStep(newTemplate.length > 0 ? newTemplate[0].id : null);
                   }}
                   style={{
                     padding: "9px 18px", borderRadius: "999px", fontSize: "13px", fontWeight: "700",
@@ -159,6 +251,22 @@ export default function RoadmapPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "24px" }}>
             {/* Main roadmap timeline */}
             <div>
+              {solvedCount === 0 && (
+                <div className="glass" style={{ padding: "16px 20px", borderRadius: "12px", marginBottom: "20px", borderLeft: "3px solid #f97316", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: "800", color: "#f97316", marginBottom: "3px" }}>
+                      🚀 Start Your Learning Journey
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--nex-text-2)" }}>
+                      Solve coding problems and complete topic quizzes to automatically increase your readiness percentage.
+                    </div>
+                  </div>
+                  <Link href="/problems" className="btn-primary btn-sm" style={{ textDecoration: "none", fontSize: "12px", whiteSpace: "nowrap" }}>
+                    Start Solving →
+                  </Link>
+                </div>
+              )}
+
               {steps.map((step, idx) => {
                 const style = statusStyle[step.status] || statusStyle["not-started"];
                 const isExpanded = expandedStep === step.id;
@@ -195,7 +303,7 @@ export default function RoadmapPage() {
                             <span style={{ fontSize: "15px", fontWeight: "800", color: "var(--nex-text-1)" }}>{step.title}</span>
                             {step.isWeakness && (
                               <span style={{ fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "999px", background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
-                                ⚠️ Needs Work
+                                ⚠️ Needs Practice
                               </span>
                             )}
                             <span style={{
@@ -211,7 +319,7 @@ export default function RoadmapPage() {
                             <div style={{ flex: 1, height: "6px", borderRadius: "999px", background: "var(--nex-surface)", overflow: "hidden" }}>
                               <div style={{ height: "100%", width: `${step.proficiency}%`, background: style.dot, borderRadius: "999px" }} />
                             </div>
-                            <span style={{ fontSize: "12px", fontWeight: "700", color: style.dot, minWidth: "35px" }}>
+                            <span style={{ fontSize: "12px", fontWeight: "700", color: step.proficiency > 0 ? style.dot : "var(--nex-text-3)", minWidth: "35px" }}>
                               {step.proficiency}%
                             </span>
                           </div>
@@ -239,7 +347,7 @@ export default function RoadmapPage() {
                               </span>
                             ))}
                           </div>
-                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
                             <Link href="/problems" className="btn-primary btn-sm" style={{ textDecoration: "none", fontSize: "12px" }}>
                               Practice {step.problems} Topic Problems →
                             </Link>
@@ -263,8 +371,8 @@ export default function RoadmapPage() {
                   📊 DSA Topic Breakdown
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {DSA_SUBTOPICS.map((topic) => {
-                    const color = topic.percent >= 70 ? "#10b981" : topic.percent >= 40 ? "#6366f1" : "#ef4444";
+                  {dsaSubtopics.map((topic) => {
+                    const color = topic.percent >= 70 ? "#10b981" : topic.percent >= 40 ? "#6366f1" : topic.percent > 0 ? "#f97316" : "var(--nex-text-3)";
                     return (
                       <div key={topic.name}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
