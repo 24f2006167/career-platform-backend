@@ -1,67 +1,42 @@
-from passlib.context import CryptContext
-
-from jose import jwt
-from datetime import datetime, timedelta
+import bcrypt
+from datetime import datetime, timedelta, timezone
+from jose import jwt, JWTError
 
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from jose import JWTError
-from fastapi import HTTPException
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
 
 
-def hash_password(password: str):
-    return pwd_context.hash(password)
+def hash_password(password: str) -> str:
+    """Hash password using native bcrypt with 72-byte safe truncation."""
+    pwd_bytes = (password or "").encode("utf-8")[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
-def verify_password(
-    plain_password,
-    hashed_password
-):
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
-    )
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify plain password against bcrypt hashed password."""
+    if not plain_password or not hashed_password:
+        return False
+    pwd_bytes = plain_password.encode("utf-8")[:72]
+    hash_bytes = hashed_password.encode("utf-8")
+    try:
+        return bcrypt.checkpw(pwd_bytes, hash_bytes)
+    except Exception:
+        return False
 
 
-def create_access_token(data: dict):
-
+def create_access_token(data: dict) -> str:
     to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-    expire = datetime.utcnow() + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-    )
-
-    to_encode.update({
-        "exp": expire
-    })
-
-    encoded_jwt = jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
-
-    return encoded_jwt
 
 def verify_access_token(token: str):
     try:
-
-        payload = jwt.decode(
-            token, 
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
-
         if email is None:
             return None
-        
         return email
-    
     except JWTError:
         return None
