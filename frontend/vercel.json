@@ -4,6 +4,28 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/auth/:path*",
+      "destination": "https://mining-dakota-five-container.trycloudflare.com/auth/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://mining-dakota-five-container.trycloudflare.com/api/:path*"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "https://mining-dakota-five-container.trycloudflare.com/admin/:path*"
+    },
+    {
+      "source": "/skills/:path*",
+      "destination": "https://mining-dakota-five-container.trycloudflare.com/skills/:path*"
+    },
+    {
+      "source": "/ai-learning/:path*",
+      "destination": "https://mining-dakota-five-container.trycloudflare.com/ai-learning/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
