@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Link from "next/link";
+import API, { apiUrl } from "@/lib/api";
+
+interface RecentSubmissionItem {
+  id: string;
+  status: string;
+  language: string;
+  created_at: string | null;
+}
 
 interface UserProfile {
   full_name: string;
@@ -16,15 +24,16 @@ interface UserProfile {
   readiness_score: number;
   target_role: string;
   experience_level: string;
+  recent_submissions?: RecentSubmissionItem[];
 }
 
-const SKILL_AREAS = [
-  { name: "DSA", score: 62, color: "#6366f1" },
-  { name: "Programming", score: 78, color: "#8b5cf6" },
-  { name: "DBMS", score: 71, color: "#06b6d4" },
-  { name: "OS", score: 54, color: "#10b981" },
-  { name: "Networks", score: 42, color: "#f59e0b" },
-  { name: "System Design", score: 31, color: "#ef4444" },
+const DEFAULT_SKILLS = [
+  { name: "DSA", score: 0, color: "#6366f1" },
+  { name: "Programming", score: 0, color: "#8b5cf6" },
+  { name: "DBMS", score: 0, color: "#06b6d4" },
+  { name: "OS", score: 0, color: "#10b981" },
+  { name: "Networks", score: 0, color: "#f59e0b" },
+  { name: "System Design", score: 0, color: "#ef4444" },
 ];
 
 const DAILY_GOALS = [
@@ -35,19 +44,14 @@ const DAILY_GOALS = [
 ];
 
 const RECOMMENDED = [
-  { type: "Problem", title: "Graph BFS/DFS", difficulty: "medium", href: "/problems/graph-bfs", why: "Your weakest topic" },
-  { type: "Project", title: "Design a URL Shortener", difficulty: "intermediate", href: "/projects/url-shortener", why: "Strengthens System Design" },
-  { type: "Learn", title: "OS Process Management", difficulty: "concept", href: "/learn/os/processes", why: "54% proficiency — needs work" },
-];
-
-const RECENT_ACTIVITY = [
-  { label: "Two Sum", status: "accepted", time: "2h ago", rating: "+8" },
-  { label: "Valid Parentheses", status: "wrong_answer", time: "5h ago", rating: "" },
-  { label: "Binary Search", status: "accepted", time: "1d ago", rating: "+8" },
+  { type: "Problem", title: "Two Sum & Hash Maps", difficulty: "easy", href: "/problems", why: "Foundational Topic" },
+  { type: "Project", title: "Design a URL Shortener", difficulty: "intermediate", href: "/projects", why: "Strengthens System Design" },
+  { type: "Learn", title: "OS Process Management", difficulty: "concept", href: "/learn", why: "Core CS Concept" },
 ];
 
 export default function CandidateDashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [skills, setSkills] = useState(DEFAULT_SKILLS);
   const [goals, setGoals] = useState(DAILY_GOALS);
   const [greeting] = useState(() => {
     const hour = new Date().getHours();
@@ -58,39 +62,57 @@ export default function CandidateDashboard() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-      const res = await fetch("http://127.0.0.1:8000/api/v1/profile/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setProfile(await res.json());
-      else throw new Error();
+      const res = await API.get("/api/v1/profile/me");
+      const data = res.data;
+      setProfile(data);
+
+      // Compute dynamic skill scores based on actual user problem solving stats
+      const solved = data.problems_solved || 0;
+      if (solved > 0) {
+        const dsaScore = Math.min(100, Math.round((solved / 10) * 100));
+        const progScore = Math.min(100, Math.round((solved / 8) * 100));
+        const dbmsScore = Math.min(100, Math.round((data.easy_solved / 5) * 100));
+        const osScore = Math.min(100, Math.round((data.medium_solved / 3) * 100));
+        const netScore = Math.min(100, Math.round((data.hard_solved / 2) * 100));
+        const sysScore = Math.min(100, Math.round((solved / 15) * 100));
+
+        setSkills([
+          { name: "DSA", score: dsaScore, color: "#6366f1" },
+          { name: "Programming", score: progScore, color: "#8b5cf6" },
+          { name: "DBMS", score: dbmsScore, color: "#06b6d4" },
+          { name: "OS", score: osScore, color: "#10b981" },
+          { name: "Networks", score: netScore, color: "#f59e0b" },
+          { name: "System Design", score: sysScore, color: "#ef4444" },
+        ]);
+      } else {
+        setSkills(DEFAULT_SKILLS);
+      }
     } catch {
+      // For brand new users or offline state, initialize clean zero progress
       setProfile({
-        full_name: "Shitanshu",
-        username: "shitanshu",
+        full_name: "Developer",
+        username: "user",
         nexvora_rating: 1200,
         problems_solved: 0,
         easy_solved: 0,
         medium_solved: 0,
         hard_solved: 0,
         streak: 0,
-        readiness_score: 36,
+        readiness_score: 0,
         target_role: "Software Engineer",
         experience_level: "beginner",
+        recent_submissions: [],
       });
+      setSkills(DEFAULT_SKILLS);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProfile();
-    }, 0);
-    return () => clearTimeout(timer);
+    fetchProfile();
   }, [fetchProfile]);
 
-  const weakestSkills = [...SKILL_AREAS].sort((a, b) => a.score - b.score).slice(0, 3);
-  const readiness = profile?.readiness_score ?? 36;
+  const weakestSkills = [...skills].sort((a, b) => a.score - b.score).slice(0, 3);
+  const readiness = profile?.readiness_score ?? 0;
   const circumference = 2 * Math.PI * 54;
   const dashOffset = circumference - (readiness / 100) * circumference;
 
@@ -163,7 +185,7 @@ export default function CandidateDashboard() {
               <div>
                 <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "4px" }}>SDE Readiness</div>
                 <div style={{ fontSize: "13px", color: "var(--nex-text-2)", lineHeight: "1.5" }}>
-                  Keep solving problems<br />to increase your score
+                  Solve problems & complete tracks<br />to build your readiness score
                 </div>
                 <Link href="/roadmap" className="btn-primary btn-sm" style={{ display: "inline-flex", marginTop: "12px" }}>
                   View Roadmap
@@ -192,10 +214,10 @@ export default function CandidateDashboard() {
                 ))}
               </div>
               <div className="progress-bar" style={{ marginTop: "16px" }}>
-                <div className="progress-fill" style={{ width: `${Math.min(100, (profile?.problems_solved ?? 0) / 5)}%` }} />
+                <div className="progress-fill" style={{ width: `${Math.min(100, ((profile?.problems_solved ?? 0) / 500) * 100)}%` }} />
               </div>
               <div style={{ fontSize: "11px", color: "var(--nex-text-3)", marginTop: "6px" }}>
-                0 / 500 problems to Grandmaster
+                {profile?.problems_solved ?? 0} / 500 problems to Grandmaster
               </div>
             </div>
 
@@ -250,7 +272,7 @@ export default function CandidateDashboard() {
                 SKILL PROFICIENCY
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {SKILL_AREAS.map((skill) => (
+                {skills.map((skill) => (
                   <div key={skill.name}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                       <span style={{ fontSize: "13px", fontWeight: "500" }}>{skill.name}</span>
@@ -331,24 +353,28 @@ export default function CandidateDashboard() {
                 <div style={{ fontSize: "13px", color: "var(--nex-text-3)", fontWeight: "600", marginBottom: "12px" }}>
                   RECENT SUBMISSIONS
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {RECENT_ACTIVITY.map((a) => (
-                    <div key={a.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "12px", minWidth: "20px" }}>
-                        {a.status === "accepted" ? "✅" : "❌"}
-                      </span>
-                      <span style={{ fontSize: "13px", flex: 1 }}>{a.label}</span>
-                      {a.rating && (
-                        <span style={{ fontSize: "12px", color: "var(--nex-success)", fontWeight: "600" }}>{a.rating}</span>
-                      )}
-                      <span style={{ fontSize: "11px", color: "var(--nex-text-3)" }}>{a.time}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/submissions" style={{
+                {profile?.recent_submissions && profile.recent_submissions.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {profile.recent_submissions.map((a) => (
+                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "12px", minWidth: "20px" }}>
+                          {a.status === "accepted" ? "✅" : "❌"}
+                        </span>
+                        <span style={{ fontSize: "13px", flex: 1, textTransform: "capitalize" }}>
+                          {a.status.replace("_", " ")} ({a.language})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: "12px", color: "var(--nex-text-3)", fontStyle: "italic" }}>
+                    No submissions yet. Start solving coding problems to track your activity!
+                  </div>
+                )}
+                <Link href="/problems" style={{
                   display: "block", marginTop: "10px", fontSize: "12px",
-                  color: "var(--nex-text-3)", textDecoration: "none",
-                }}>View all →</Link>
+                  color: "var(--nex-primary)", textDecoration: "none", fontWeight: "600"
+                }}>Start Practice →</Link>
               </div>
             </div>
           </div>

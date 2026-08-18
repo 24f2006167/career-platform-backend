@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
+import API from "@/lib/api";
 
 interface UserProfile {
   full_name: string;
@@ -23,18 +24,9 @@ interface UserProfile {
   target_role: string;
   experience_level: string;
   readiness_score: number;
-  achievements: Array<{ name: string; icon: string; description: string; unlocked_at: string }>;
+  achievements: Array<{ name: string; icon: string; description: string; unlocked_at: string | null }>;
   joined_at: string;
 }
-
-const ACHIEVEMENTS_LIST = [
-  { id: "1", name: "First Blood", icon: "⚡", description: "Solved your first DSA problem on Nexvora", unlocked: true },
-  { id: "2", name: "Streak Starter", icon: "🔥", description: "Maintained a 7-day coding streak", unlocked: false },
-  { id: "3", name: "Centurion", icon: "💯", description: "Solved 100 problems across all topics", unlocked: false },
-  { id: "4", name: "Contest Ready", icon: "🏆", description: "Participated in your first Nexvora contest", unlocked: true },
-  { id: "5", name: "System Architect", icon: "🏗️", description: "Completed System Design foundations track", unlocked: false },
-  { id: "6", name: "Algorithmic Master", icon: "👑", description: "Reached 2000+ Nexvora Elo rating", unlocked: false },
-];
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -54,62 +46,45 @@ export default function ProfilePage() {
 
   async function fetchProfile() {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-      const res = await fetch("http://127.0.0.1:8000/api/v1/profile/me", {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await API.get("/api/v1/profile/me");
+      const data = res.data;
+      setProfile(data);
+      setFormData({
+        full_name: data.full_name || "",
+        bio: data.bio || "",
+        target_role: data.target_role || "Software Engineer",
+        github_url: data.github_url || "",
+        linkedin_url: data.linkedin_url || "",
+        portfolio_url: data.portfolio_url || "",
       });
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-        setFormData({
-          full_name: data.full_name || "",
-          bio: data.bio || "",
-          target_role: data.target_role || "Software Engineer",
-          github_url: data.github_url || "",
-          linkedin_url: data.linkedin_url || "",
-          portfolio_url: data.portfolio_url || "",
-        });
-      }
     } catch {
       setProfile({
-        full_name: "Shitanshu Chaurasiya",
-        username: "shitanshu",
-        email: "laptop18122022@gmail.com",
-        bio: "Full Stack SDE passionate about scalable backend systems and algorithm optimization.",
+        full_name: "Developer",
+        username: "user",
+        email: "user@example.com",
+        bio: "Building software and mastering computer science concepts.",
         nexvora_rating: 1200,
         contest_rating: 1200,
-        xp: 150,
-        level: 2,
-        streak: 3,
-        problems_solved: 5,
-        easy_solved: 4,
-        medium_solved: 1,
+        xp: 0,
+        level: 1,
+        streak: 0,
+        problems_solved: 0,
+        easy_solved: 0,
+        medium_solved: 0,
         hard_solved: 0,
         target_role: "Software Engineer",
-        experience_level: "Intermediate",
-        readiness_score: 42,
-        achievements: [
-          { name: "First Blood", icon: "⚡", description: "Solved your first problem", unlocked_at: "2026-08-12" },
-        ],
-        joined_at: "2026-08-01",
+        experience_level: "beginner",
+        readiness_score: 0,
+        achievements: [],
+        joined_at: new Date().toISOString(),
       });
     }
   }
 
   async function handleSave() {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-      const res = await fetch("http://127.0.0.1:8000/api/v1/profile/me", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
+      const res = await API.patch("/api/v1/profile/me", formData);
+      if (res.data) {
         setEditing(false);
         fetchProfile();
       }
@@ -117,6 +92,17 @@ export default function ProfilePage() {
       setEditing(false);
     }
   }
+
+  const solvedCount = profile?.problems_solved || 0;
+
+  const achievementsList = [
+    { id: "1", name: "First Blood", icon: "⚡", description: "Solved your first DSA problem on Nexvora", unlocked: solvedCount > 0 },
+    { id: "2", name: "Streak Starter", icon: "🔥", description: "Maintained a 7-day coding streak", unlocked: (profile?.streak || 0) >= 7 },
+    { id: "3", name: "Centurion", icon: "💯", description: "Solved 100 problems across all topics", unlocked: solvedCount >= 100 },
+    { id: "4", name: "Contest Ready", icon: "🏆", description: "Participated in your first Nexvora contest", unlocked: (profile?.contest_rating || 1200) > 1200 },
+    { id: "5", name: "System Architect", icon: "🏗️", description: "Completed System Design foundations track", unlocked: (profile?.readiness_score || 0) >= 75 },
+    { id: "6", name: "Algorithmic Master", icon: "👑", description: "Reached 2000+ Nexvora Elo rating", unlocked: (profile?.nexvora_rating || 1200) >= 2000 },
+  ];
 
   return (
     <div className="layout-sidebar">
@@ -197,7 +183,7 @@ export default function ProfilePage() {
           <div>
             <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>🏆 Achievements & Badges</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-              {ACHIEVEMENTS_LIST.map((ach) => (
+              {achievementsList.map((ach) => (
                 <div
                   key={ach.id}
                   className="glass"
