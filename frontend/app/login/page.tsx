@@ -58,10 +58,12 @@ export default function LoginPage() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
 
-      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const axiosErr = err as { response?: { data?: { detail?: string } }; message?: string };
       const detail = axiosErr.response?.data?.detail;
       if (typeof detail === "string") {
         setError(detail);
+      } else if (!axiosErr.response) {
+        setError("Unable to connect to API backend. Please check server status or NEXT_PUBLIC_API_URL.");
       } else {
         setError("Invalid email or password");
       }

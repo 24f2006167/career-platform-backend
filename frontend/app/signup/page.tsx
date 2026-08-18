@@ -86,6 +86,8 @@ export default function SignupPage() {
         setError(detail.map((item) => `${item.loc?.join(".") || "field"}: ${item.msg || "invalid"}`).join(" | "));
       } else if (typeof detail === "string") {
         setError(detail);
+      } else if (!axiosError.response) {
+        setError("Unable to connect to API backend. Please check server status or NEXT_PUBLIC_API_URL.");
       } else {
         setError("Signup failed. Please check your details.");
       }
